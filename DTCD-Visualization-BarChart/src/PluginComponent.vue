@@ -1,6 +1,6 @@
 <template>
   <div class="barchart-container">
-    <div ref="title" class="title" v-text="title"/>
+    <div class="title" v-text="title"/>
     <div ref="svgContainer" class="svg-container"/>
   </div>
 </template>
@@ -20,17 +20,28 @@ export default {
     marginX: 16,
     marginY: 35,
     diffRectWidth: 0,
+    targetBar: null,
+    secondBars: [],
+    sortedBars: [],
+    targetBarColor: '#C6C6D4',
+    secondBarColor: '#6290C3',
     /** Chart user data. */
     title: 'Грузооборот с учётом РА',
-    bars: [
-      { name: 'План', value: 1800, color: '#C6C6D4', lineValue: 1620 },
-      { name: 'Факт', value: 1850, color: '#6290C3', lineValue: 1620 },
+    targetName: 'План',
+    dataset: [
+      { name: 'План', value: 1800, lineValue: 1620 },
+      { name: 'Факт', value: 1850, lineValue: 1620 },
     ],
   }),
   mounted() {
     this.render();
   },
   methods: {
+    setTitle(text = '') {
+      this.title = text;
+      this.render();
+    },
+
     render() {
       this.clearSvgContainer();
       this.prepareRenderData();
@@ -46,6 +57,10 @@ export default {
     prepareRenderData() {
       const { svgContainer } = this.$refs;
       const { offsetWidth, offsetHeight } = svgContainer;
+
+      this.targetBar = this.dataset.find(b => b.name === this.targetName);
+      this.secondBars = this.dataset.filter(b => b.name !== this.targetName);
+      this.sortedBars = [this.targetBar, ...this.secondBars];
 
       this.width = offsetWidth - this.marginX * 2;
       this.height = offsetHeight - this.marginY * 2;
@@ -67,12 +82,12 @@ export default {
 
       this.xScale = d3.scaleBand()
         .range([0, this.width])
-        .domain(this.bars.map(b => b.name))
+        .domain(this.sortedBars.map(b => b.name))
         .paddingInner(paddingInner)
         .paddingOuter(0.35);
 
-      const barValues = this.bars.map(b => b.value);
-      const lineValues = this.bars.map(b => b.lineValue);
+      const barValues = this.sortedBars.map(b => b.value);
+      const lineValues = this.sortedBars.map(b => b.lineValue);
       const [minY, maxY] = d3.extent([ ...barValues, ...lineValues]);
 
       this.yScale = d3.scaleLinear()
@@ -97,20 +112,21 @@ export default {
 
       const axisLine = d3.line()([[0, 0], [this.width, 0]]);
 
-      axis.select('.domain')
-        .attr('class', 'x-axis-line')
-        .attr('d', axisLine);
+      axis.select('.domain').attr('class', 'x-axis-line').attr('d', axisLine);
     },
 
     createBars() {
       const barWidth = this.xScale.bandwidth();
       this.svg.selectAll('bar')
-        .data(this.bars)
+        .data(this.sortedBars)
         .enter()
         .append('rect')
         .attr('x', d => this.xScale(d.name))
         .attr('y', d => this.yScale(d.value))
-        .attr('fill', d => d.color)
+        .attr('fill', d => {
+          const { targetName, targetBarColor, secondBarColor} = this;
+          return d.name === targetName ? targetBarColor : secondBarColor;
+        })
         .attr('height', d => this.height - this.yScale(d.value))
         .attr('width', d => {
           const x = this.xScale(d.name);
@@ -125,16 +141,10 @@ export default {
     },
 
     createDiffRects() {
-      const plan = this.bars.find(bar => bar.name === 'План');
-      const barList = this.bars.filter(b => b.name !== 'План');
-      const planData = {
-        planY: this.yScale(plan.value),
-        planVal: plan.value,
-      };
-
-      for (const bar of barList) {
+      const planVal = this.targetBar.value;
+      const planY = this.yScale(planVal);
+      for (const bar of this.secondBars) {
         const { name, value } = bar;
-        const { planY, planVal } = planData;
 
         if (value === planVal) continue;
 
@@ -186,6 +196,5 @@ export default {
 </script>
 
 <style lang="sass">
-@import ./styles/base
 @import ./styles/component
 </style>

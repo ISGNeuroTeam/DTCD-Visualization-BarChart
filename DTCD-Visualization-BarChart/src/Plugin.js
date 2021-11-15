@@ -5,7 +5,6 @@ import {
   PanelPlugin,
   LogSystemAdapter,
   EventSystemAdapter,
-  StyleSystemAdapter,
 } from './../../DTCD-SDK';
 
 export class Plugin extends PanelPlugin {
@@ -19,13 +18,6 @@ export class Plugin extends PanelPlugin {
 
     const logSystem = new LogSystemAdapter(guid, pluginMeta.name);
     const eventSystem = new EventSystemAdapter();
-    const styleSystem = new StyleSystemAdapter();
-
-    // console.log(styleSystem.getCurrentTheme());
-    // styleSystem.setVariablesToElement(
-    //   document.querySelector(selector),
-    //   styleSystem.getCurrentTheme(),
-    // );
 
     const { default: VueJS } = this.getDependence('Vue');
 
