@@ -27,6 +27,7 @@ export default {
     secondBarColor: '#6290C3',
     /** Chart user data. */
     title: 'Грузооборот с учётом РА',
+    targetName: 'План',
     dataset: [
       { name: 'План', value: 1800, lineValue: 1620 },
       { name: 'Факт', value: 1850, lineValue: 1620 },
@@ -57,10 +58,9 @@ export default {
       const { svgContainer } = this.$refs;
       const { offsetWidth, offsetHeight } = svgContainer;
 
-      this.targetBar = this.dataset[0]
+      this.targetBar = this.dataset.find(b => b.name === this.targetName);
       this.secondBars = this.dataset.filter(b => b.name !== this.targetName);
       this.sortedBars = [this.targetBar, ...this.secondBars];
-      // this.sortedBars = this.dataset
 
       this.width = offsetWidth - this.marginX * 2;
       this.height = offsetHeight - this.marginY * 2;

@@ -47,11 +47,15 @@ export class Plugin extends PanelPlugin {
   }
 
   setPluginConfig(config = {}) {
+    const { targetName, dataSource } = config;
+
+    this.vueComponent.targetName = targetName;
+
     // <TEMP>
-    this.#dataSourceSystem.createDataSource(config.dataSource);
+    this.#dataSourceSystem.createDataSource(dataSource);
     this.#eventSystem.subscribe(
       this.#dataSourceSystemGUID,
-      `${config.dataSource.name}-UPDATE`,
+      `${dataSource.name}-UPDATE`,
       this.#guid,
       'updateData'
     );
@@ -60,6 +64,7 @@ export class Plugin extends PanelPlugin {
 
   getPluginConfig() {
     return {
+      targetName: 'План-3',
       dataSource: {
         type: 'OTL',
         name: 'DS-1',
