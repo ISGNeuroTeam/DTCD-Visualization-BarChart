@@ -41,23 +41,28 @@ export class Plugin extends PanelPlugin {
     this.#dataSourceName = '';
   }
 
-  updateData(data) {
+  loadData(data) {
     this.vueComponent.dataset = data.toArray();
     this.vueComponent.render();
   }
 
-  setPluginConfig(config = {}) {
+  async setPluginConfig(config = {}) {
     const { targetName, dataSource } = config;
 
     this.vueComponent.targetName = targetName;
 
     // <TEMP>
-    this.#dataSourceSystem.createDataSource(dataSource);
+    const ds = await this.#dataSourceSystem.createDataSource(dataSource);
     this.#eventSystem.subscribe(
       this.#dataSourceSystemGUID,
       `${dataSource.name}-UPDATE`,
       this.#guid,
-      'updateData'
+      'loadData'
+    );
+    this.getSystem('EventSystem').publishEvent(
+      this.#dataSourceSystemGUID,
+      `${dataSource.name}-UPDATE`,
+      ds
     );
     // </TEMP>
   }
