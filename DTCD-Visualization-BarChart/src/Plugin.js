@@ -46,23 +46,20 @@ export class Plugin extends PanelPlugin {
     this.vueComponent.render();
   }
 
-  async setPluginConfig(config = {}) {
+  setPluginConfig(config = {}) {
     const { targetName, dataSource } = config;
 
     this.vueComponent.targetName = targetName;
 
     // <TEMP>
-    const ds = await this.#dataSourceSystem.createDataSource(dataSource);
+
+    // BEFORE USE THIS YOU NEED NEW EXTERNAL-DATASOURCE-OTL PLUGIN VERSION
+    this.#dataSourceSystem.createDataSource(dataSource);
     this.#eventSystem.subscribe(
       this.#dataSourceSystemGUID,
       `${dataSource.name}-UPDATE`,
       this.#guid,
       'loadData'
-    );
-    this.getSystem('EventSystem').publishEvent(
-      this.#dataSourceSystemGUID,
-      `${dataSource.name}-UPDATE`,
-      ds
     );
     // </TEMP>
   }
