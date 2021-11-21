@@ -6,6 +6,7 @@ import {
   LogSystemAdapter,
   EventSystemAdapter,
   DataSourceSystemAdapter,
+  StorageSystemAdapter,
 } from './../../DTCD-SDK';
 
 export class Plugin extends PanelPlugin {
@@ -15,10 +16,12 @@ export class Plugin extends PanelPlugin {
 
   #guid;
   #dataSourceSystemGUID;
-  #dataSourceName;
+  #dataSource;
   #logSystem;
   #dataSourceSystem;
   #eventSystem;
+  #storageSystem;
+  #targetName;
 
   constructor(guid, selector) {
     super();
@@ -29,6 +32,7 @@ export class Plugin extends PanelPlugin {
     const eventSystem = (this.#eventSystem = new EventSystemAdapter(guid));
     eventSystem.registerPluginInstance(this);
     const dataSourceSystem = (this.#dataSourceSystem = new DataSourceSystemAdapter());
+    this.#storageSystem = new StorageSystemAdapter();
 
     const { default: VueJS } = this.getDependence('Vue');
 
@@ -38,42 +42,42 @@ export class Plugin extends PanelPlugin {
     }).$mount(selector);
 
     this.vueComponent = view.$children[0];
-    this.#dataSourceName = '';
+    this.#dataSource = '';
+    this.#targetName = '';
   }
 
   loadData(data) {
-    this.vueComponent.dataset = data.toArray();
+    this.vueComponent.dataset = data;
     this.vueComponent.render();
   }
 
+  processDataSourceEvent(eventData) {
+    const { dataSource, status } = eventData;
+    this.#dataSource = dataSource;
+    const data = this.#storageSystem.session.getRecord(this.#dataSource);
+    this.loadData(data);
+  }
+
   setPluginConfig(config = {}) {
-    const { targetName, dataSource } = config;
-
-    this.vueComponent.targetName = targetName;
-
-    // <TEMP>
-
-    // BEFORE USE THIS YOU NEED NEW EXTERNAL-DATASOURCE-OTL PLUGIN VERSION
-    this.#dataSourceSystem.createDataSource(dataSource);
-    this.#eventSystem.subscribe(
-      this.#dataSourceSystemGUID,
-      `${dataSource.name}-UPDATE`,
-      this.#guid,
-      'loadData'
-    );
-    // </TEMP>
+    const targetName = config?.targetName;
+    const dataSource = config?.dataSource;
+    if (targetName && dataSource) {
+      this.#dataSource = dataSource;
+      this.#targetName = targetName;
+      this.vueComponent.targetName = targetName;
+      const DS = this.getSystem('DataSourceSystem').getDataSource(this.#dataSource);
+      if (DS.status === 'success') {
+        const data = this.#storageSystem.session.getRecord(this.#dataSource);
+        this.loadData(data);
+      }
+    }
   }
 
   getPluginConfig() {
-    return {
-      targetName: 'План-3',
-      dataSource: {
-        type: 'OTL',
-        name: 'DS-1',
-        original_otl:
-          'makeresults count=10| streamstats count as x| eval value=20-x | eval lineValue=15-x| eval name="План-"+x ',
-      },
-    };
+    const config = {};
+    if (this.#dataSource) config.dataSource = this.#dataSource;
+    if (this.#targetName) config.targetName = this.#targetName;
+    return config;
   }
 
   setFormSettings() {}
