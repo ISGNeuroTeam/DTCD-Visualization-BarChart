@@ -25,29 +25,53 @@ export default {
     sortedBars: [],
     targetBarColor: '#C6C6D4',
     secondBarColor: '#6290C3',
+    isDataError: false,
+    errorMessage: '',
     /** Chart user data. */
-    title: 'Грузооборот с учётом РА',
-    targetName: 'План',
-    dataset: [
-      { name: 'План', value: 1800, lineValue: 1620 },
-      { name: 'Факт', value: 1850, lineValue: 1620 },
-    ],
+    title: '',
+    targetName: '',
+    dataset: [],
   }),
-  mounted() {
-    this.render();
-  },
   methods: {
     setTitle(text = '') {
       this.title = text;
       this.render();
     },
 
+    setTargetName(name = '') {
+      this.targetName = name;
+      this.render();
+    },
+
+    setError(text = '', show = false) {
+      this.errorMessage = text;
+      this.isDataError = show;
+    },
+
     render() {
-      this.clearSvgContainer();
-      this.prepareRenderData();
-      this.createAxisX();
-      this.createBars();
-      this.createDiffRects();
+      const { isValid, error } = this.validateData();
+
+      if (!isValid) {
+        return this.setError(error, true);
+      }
+
+      this.$nextTick(() => {
+        this.clearSvgContainer();
+        this.prepareRenderData();
+        this.createAxisX();
+        this.createBars();
+        this.createDiffRects();
+      });
+    },
+
+    validateData() {
+      const { dataset, targetName } = this;
+
+      if (dataset.length <= 0) {
+        return { isValid: false, error: 'Нет данных для построения' };
+      }
+
+      return { isValid: true, error: '' };
     },
 
     clearSvgContainer() {

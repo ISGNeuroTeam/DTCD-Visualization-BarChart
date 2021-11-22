@@ -10,28 +10,23 @@ import {
 } from './../../DTCD-SDK';
 
 export class Plugin extends PanelPlugin {
+  #title;
+  #targetName;
+  #dataSource;
+  #storageSystem;
+
   static getRegistrationMeta() {
     return pluginMeta;
   }
 
-  #guid;
-  #dataSourceSystemGUID;
-  #dataSource;
-  #logSystem;
-  #dataSourceSystem;
-  #eventSystem;
-  #storageSystem;
-  #targetName;
-
   constructor(guid, selector) {
     super();
 
-    this.#guid = guid;
-    this.#dataSourceSystemGUID = this.getGUID(this.getSystem('DataSourceSystem'));
-    const logSystem = (this.#logSystem = new LogSystemAdapter(guid, pluginMeta.name));
-    const eventSystem = (this.#eventSystem = new EventSystemAdapter(guid));
+    const logSystem = new LogSystemAdapter(guid, pluginMeta.name);
+    const eventSystem = new EventSystemAdapter(guid);
+    const dataSourceSystem = new DataSourceSystemAdapter();
+
     eventSystem.registerPluginInstance(this);
-    const dataSourceSystem = (this.#dataSourceSystem = new DataSourceSystemAdapter());
     this.#storageSystem = new StorageSystemAdapter();
 
     const { default: VueJS } = this.getDependence('Vue');
@@ -42,8 +37,9 @@ export class Plugin extends PanelPlugin {
     }).$mount(selector);
 
     this.vueComponent = view.$children[0];
-    this.#dataSource = '';
+    this.#title = '';
     this.#targetName = '';
+    this.#dataSource = '';
   }
 
   loadData(data) {
@@ -59,12 +55,20 @@ export class Plugin extends PanelPlugin {
   }
 
   setPluginConfig(config = {}) {
-    const targetName = config?.targetName;
-    const dataSource = config?.dataSource;
-    if (targetName && dataSource) {
-      this.#dataSource = dataSource;
+    const { title, targetName, dataSource } = config;
+
+    if (typeof title !== 'undefined') {
+      this.#title = title;
+      this.vueComponent.setTitle(title);
+    }
+
+    if (typeof targetName !== 'undefined') {
       this.#targetName = targetName;
-      this.vueComponent.targetName = targetName;
+      this.vueComponent.setTargetName(targetName);
+    }
+
+    if (typeof dataSource !== 'undefined') {
+      this.#dataSource = dataSource;
       const DS = this.getSystem('DataSourceSystem').getDataSource(this.#dataSource);
       if (DS.status === 'success') {
         const data = this.#storageSystem.session.getRecord(this.#dataSource);
@@ -75,6 +79,7 @@ export class Plugin extends PanelPlugin {
 
   getPluginConfig() {
     const config = {};
+    if (this.#title) config.title = this.#title;
     if (this.#dataSource) config.dataSource = this.#dataSource;
     if (this.#targetName) config.targetName = this.#targetName;
     return config;
