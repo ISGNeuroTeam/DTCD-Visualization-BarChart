@@ -12,6 +12,8 @@ import {
 export class Plugin extends PanelPlugin {
   #title;
   #targetName;
+  #colValue;
+  #colLineValue;
   #dataSourceName;
   #storageSystem;
   #guid;
@@ -61,7 +63,7 @@ export class Plugin extends PanelPlugin {
   }
 
   setPluginConfig(config = {}) {
-    const { title, targetName, dataSource } = config;
+    const { title, targetName, dataSource, colValue, colLineValue } = config;
 
     if (typeof title !== 'undefined') {
       this.#title = title;
@@ -73,6 +75,16 @@ export class Plugin extends PanelPlugin {
       this.vueComponent.setTargetName(targetName);
     }
 
+    if (typeof colValue !== 'undefined') {
+      this.#colValue = colValue;
+      this.vueComponent.setColValue(colValue);
+    }
+
+    if (typeof colLineValue !== 'undefined') {
+      this.#colLineValue = colLineValue;
+      this.vueComponent.setColLineValue(colLineValue);
+    }
+
     if (typeof dataSource !== 'undefined') {
       if (this.#dataSourceName) {
         this.#eventSystem.unsubscribe(
@@ -80,7 +92,7 @@ export class Plugin extends PanelPlugin {
           'DataSourceStatusUpdate',
           this.#guid,
           'processDataSourceEvent',
-          { dataSource: this.#dataSourceName, status: 'success' },
+          { dataSource: this.#dataSourceName, status: 'success' }
         );
       }
 
@@ -107,6 +119,8 @@ export class Plugin extends PanelPlugin {
     if (this.#title) config.title = this.#title;
     if (this.#dataSourceName) config.dataSource = this.#dataSourceName;
     if (this.#targetName) config.targetName = this.#targetName;
+    if (this.#colValue) config.colValue = this.#colValue;
+    if (this.#colLineValue) config.colLineValue = this.#colLineValue;
     return config;
   }
 

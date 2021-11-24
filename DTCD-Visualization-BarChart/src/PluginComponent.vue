@@ -30,6 +30,8 @@ export default {
     /** Chart user data. */
     title: '',
     targetName: '',
+    colValue:"value",
+    colLineValue:"lineValue",
     dataset: [],
   }),
   methods: {
@@ -41,6 +43,16 @@ export default {
     setTargetName(name = '') {
       this.targetName = name;
       this.render();
+    },
+
+    setColValue(key="value"){
+      this.colValue=key
+      this.render();
+    },
+
+    setColLineValue(key="lineValue"){
+      this.colLineValue=key;
+      this.render()
     },
 
     setError(text = '', show = false) {
@@ -110,8 +122,8 @@ export default {
         .paddingInner(paddingInner)
         .paddingOuter(0.35);
 
-      const barValues = this.sortedBars.map(b => b.value);
-      const lineValues = this.sortedBars.map(b => b.lineValue);
+      const barValues = this.sortedBars.map(b => b[this.colValue]);
+      const lineValues = this.sortedBars.map(b => b[this.colLineValue]);
       const [minY, maxY] = d3.extent([ ...barValues, ...lineValues]);
 
       this.yScale = d3.scaleLinear()
@@ -146,26 +158,26 @@ export default {
         .enter()
         .append('rect')
         .attr('x', d => this.xScale(d.name))
-        .attr('y', d => this.yScale(d.value))
+        .attr('y', d => this.yScale(d[this.colValue]))
         .attr('fill', d => {
           const { targetName, targetBarColor, secondBarColor} = this;
           return d.name === targetName ? targetBarColor : secondBarColor;
         })
-        .attr('height', d => this.height - this.yScale(d.value))
+        .attr('height', d => this.height - this.yScale(d[this.colValue]))
         .attr('width', d => {
           const x = this.xScale(d.name);
-          const y = this.yScale(d.value);
+          const y = this.yScale(d[this.colValue]);
           const textX = x + barWidth / 2;
           const textY = y - 10;
           const barLineY = this.yScale(d.lineValue);
           this.addLineToBar(x, barLineY, barWidth, d.lineValue);
-          this.addTextElement(textX, textY, d.value, 'bar-value-caption');
+          this.addTextElement(textX, textY, d[this.colValue], 'bar-value-caption');
           return barWidth;
         });
     },
 
     createDiffRects() {
-      const planVal = this.targetBar.value;
+      const planVal = this.targetBar[this.colValue];
       const planY = this.yScale(planVal);
       for (const bar of this.secondBars) {
         const { name, value } = bar;
