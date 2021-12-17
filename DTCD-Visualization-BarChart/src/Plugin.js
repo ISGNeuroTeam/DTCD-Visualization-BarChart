@@ -18,6 +18,7 @@ export class Plugin extends PanelPlugin {
   #storageSystem;
   #guid;
   #eventSystem;
+  #dataSourceSystem;
   #dataSourceSystemGUID;
 
   static getRegistrationMeta() {
@@ -35,6 +36,7 @@ export class Plugin extends PanelPlugin {
     this.#guid = guid;
     this.#eventSystem = eventSystem;
     this.#storageSystem = new StorageSystemAdapter();
+    this.#dataSourceSystem = new DataSourceSystemAdapter();
     this.#dataSourceSystemGUID = this.getGUID(this.getSystem('DataSourceSystem'));
 
     const { default: VueJS } = this.getDependence('Vue');
@@ -124,7 +126,69 @@ export class Plugin extends PanelPlugin {
     return config;
   }
 
-  setFormSettings() {}
+  setFormSettings(config) {
+    this.setPluginConfig(config);
+  }
 
-  getFormSettings() {}
+  getFormSettings() {
+    return {
+      fields: [
+        {
+          component: 'title',
+          propValue: 'Источник данных',
+        },
+        {
+          component: 'datasource',
+          propName: 'dataSource',
+          attrs: {
+            label: 'Выберите источник данных',
+            placeholder: 'Выберите значение',
+            required: true,
+          },
+          options: Object.keys(this.#dataSourceSystem.getDataSourceList()).map(name => ({
+            value: name,
+          })),
+        },
+        {
+          component: 'title',
+          propValue: 'Общие настройки',
+        },
+        {
+          component: 'text',
+          propName: 'colValue',
+          attrs: {
+            label: 'Имя колонки со значениями',
+            propValue: 'value',
+            required: true,
+          },
+        },
+        {
+          component: 'text',
+          propName: 'title',
+          attrs: {
+            label: 'Заголовок',
+            required: true,
+          },
+        },
+        {
+          component: 'text',
+          propName: 'colLineValue',
+          attrs: {
+            label: 'Имя колонки cо значениями для линий',
+            propValue: 'lineValue',
+            required: true,
+          },
+        },
+        {
+          component: 'text',
+          propName: 'targetName',
+          attrs: {
+            label: 'Значение поля "name" записи целевого показателя',
+            propValue: 'targetName',
+            required: true,
+          },
+        },
+      ],
+    };
+  }
 }
