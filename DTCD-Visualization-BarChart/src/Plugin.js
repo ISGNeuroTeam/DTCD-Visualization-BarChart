@@ -145,9 +145,6 @@ export class Plugin extends PanelPlugin {
             placeholder: 'Выберите значение',
             required: true,
           },
-          options: Object.keys(this.#dataSourceSystem.getDataSourceList()).map(name => ({
-            value: name,
-          })),
         },
         {
           component: 'title',
