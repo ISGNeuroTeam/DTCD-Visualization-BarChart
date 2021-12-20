@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - plugin datasource subscribe events
 - colValue and colLineValue in plugin config
 - getFormSettings method
+- tests init
 
 ### Changed
 - plugin config dumping
