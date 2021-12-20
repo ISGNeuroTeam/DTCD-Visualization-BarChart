@@ -29,9 +29,9 @@ export default {
     errorMessage: '',
     /** Chart user data. */
     title: '',
-    targetName: '',
-    colValue:"value",
-    colLineValue:"lineValue",
+    targetName: 'План',
+    colValue: 'value',
+    colLineValue: 'lineValue',
     dataset: [],
   }),
   methods: {
@@ -46,7 +46,7 @@ export default {
     },
 
     setColValue(key="value"){
-      this.colValue=key
+      this.colValue = key;
       this.render();
     },
 

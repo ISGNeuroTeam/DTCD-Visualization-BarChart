@@ -9,7 +9,7 @@ import {
   StorageSystemAdapter,
 } from './../../DTCD-SDK';
 
-export class Plugin extends PanelPlugin {
+export class VisualizationBarChart extends PanelPlugin {
   #title;
   #targetName;
   #colValue;
@@ -48,7 +48,9 @@ export class Plugin extends PanelPlugin {
 
     this.vueComponent = view.$children[0];
     this.#title = '';
-    this.#targetName = '';
+    this.#targetName = 'План';
+    this.#colValue = 'value';
+    this.#colLineValue = 'lineValue';
     this.#dataSourceName = '';
   }
 
@@ -147,8 +149,12 @@ export class Plugin extends PanelPlugin {
           },
         },
         {
-          component: 'title',
-          propValue: 'Общие настройки',
+          component: 'text',
+          propName: 'title',
+          attrs: {
+            label: 'Заголовок',
+            required: true,
+          },
         },
         {
           component: 'text',
@@ -156,14 +162,6 @@ export class Plugin extends PanelPlugin {
           attrs: {
             label: 'Имя колонки со значениями',
             propValue: 'value',
-            required: true,
-          },
-        },
-        {
-          component: 'text',
-          propName: 'title',
-          attrs: {
-            label: 'Заголовок',
             required: true,
           },
         },
