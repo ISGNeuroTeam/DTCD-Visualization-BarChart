@@ -29,17 +29,17 @@ export class VisualizationBarChart extends PanelPlugin {
   constructor(guid, selector) {
     super();
 
-    const logSystem = new LogSystemAdapter('0.4.0', guid, pluginMeta.name);
-    const eventSystem = new EventSystemAdapter('0.3.0', guid);
+    const logSystem = new LogSystemAdapter('0.5.0', guid, pluginMeta.name);
+    const eventSystem = new EventSystemAdapter('0.4.0', guid);
 
     eventSystem.registerPluginInstance(this);
     this.#guid = guid;
     this.#eventSystem = eventSystem;
-    this.#storageSystem = new StorageSystemAdapter('0.4.0');
-    this.#dataSourceSystem = new DataSourceSystemAdapter('0.1.0');
+    this.#storageSystem = new StorageSystemAdapter('0.5.0');
+    this.#dataSourceSystem = new DataSourceSystemAdapter('0.2.0');
 
     this.#dataSourceSystemGUID = this.getGUID(
-      this.getSystem('DataSourceSystem', '0.1.0')
+      this.getSystem('DataSourceSystem', '0.2.0')
     );
 
     const { default: VueJS } = this.getDependence('Vue');
