@@ -1,6 +1,6 @@
 {
   "name": "dtcd-visualization-barchart",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Panel with barchart visualization",
   "private": true,
   "homepage": "https://github.com/ISGNeuroTeam/DTCD-Visualization-BarChart",
@@ -14,6 +14,7 @@
     "@babel/preset-env": "7.13.12",
     "@rollup/plugin-alias": "3.1.2",
     "@rollup/plugin-commonjs": "17.1.0",
+    "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "11.2.0",
     "@rollup/plugin-replace": "2.4.1",
     "@types/jest": "26.0.22",

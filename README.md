@@ -9,7 +9,7 @@ In order to use this plugin you need to download it, build and move build-file t
 ### Prerequisites
 
 - [node.js](https://nodejs.org/en/) LTS version 14.x.x
-- [DTCD](https://github.com/ISGNeuroTeam/DTCD) v0.3.0
+- [DTCD](https://github.com/ISGNeuroTeam/DTCD) v0.4.0
 - `make` utility
 
 ### Building
@@ -46,7 +46,7 @@ tar -zxf DTCD-Visualization-BarChart-*.tar.gz ./DTCD-Visualization-BarChart
 
 ## Built With
 
-- [DTCD-SDK](https://github.com/ISGNeuroTeam/DTCD-SDK) v0.1.2
+- [DTCD-SDK](https://github.com/ISGNeuroTeam/DTCD-SDK) 
 - [Rollup.js](https://rollupjs.org/guide/en/) - JavaScript project builder
 
 ## Contributing
