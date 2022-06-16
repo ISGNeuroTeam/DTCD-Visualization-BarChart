@@ -28,6 +28,7 @@ export default {
     targetBarColor: 'var(--border)',
     secondBarColor: 'var(--aero)',
     isDataError: false,
+    dataAttr: '',
     errorMessage: '',
     /** Chart user data. */
     title: '',
@@ -36,6 +37,13 @@ export default {
     colLineValue: 'lineValue',
     dataset: [],
   }),
+  mounted() {
+    const { svgContainer } = this.$refs;
+    const attrs = svgContainer.getAttributeNames();
+    /** Used to support scoped styles. */
+    this.dataAttr = attrs.find(attr => attr.startsWith('data-'));
+    this.render();
+  },
   methods: {
     setTitle(text = '') {
       this.title = text;
@@ -125,11 +133,13 @@ export default {
 
       this.svg = d3.select(svgContainer)
         .append('svg')
+        .attr(this.dataAttr, '')
         .attr('class', 'content')
         .append('g')
         .attr('transform', `translate(${this.marginX}, ${this.marginY})`);
 
       this.svg.append('rect')
+        .attr(this.dataAttr, '')
         .attr('class', 'chart-back')
         .attr('x', 0)
         .attr('y', 0 - this.marginY)
@@ -164,13 +174,15 @@ export default {
         d3.select(this).remove();
       });
 
+      const dataAttr = this.dataAttr;
+
       axis.selectAll('.tick text').each(function() {
-        d3.select(this).attr('class', 'x-axis-tick-caption');
+        d3.select(this).attr(dataAttr, '').attr('class', 'x-axis-tick-caption');
       });
 
       const axisLine = d3.line()([[0, 0], [this.width, 0]]);
 
-      axis.select('.domain').attr('class', 'x-axis-line').attr('d', axisLine);
+      axis.select('.domain').attr(dataAttr, '').attr('class', 'x-axis-line').attr('d', axisLine);
     },
 
     createBars() {
@@ -236,7 +248,12 @@ export default {
 
     addLineToBar(x, y, width, text) {
       const line = d3.line()([[x - 5, y], [x + width + 5, y]]);
-      this.svg.append('path').attr('class', 'risk-line').attr('d', line);
+      this.svg
+        .append('path')
+        .attr(this.dataAttr, '')
+        .attr('class', 'risk-line')
+        .attr('d', line);
+
       this.addTextElement(
         x + width / 2,
         y + 20,
@@ -246,14 +263,18 @@ export default {
     },
 
     addTextElement(x, y, text, className) {
-      const el = this.svg.append('text').attr('class', className)
+      const el = this.svg
+        .append('text')
+        .attr(this.dataAttr, '')
+        .attr('class', className);
+
       el.attr('x', x).attr('y', y).text(text);
     },
   },
 };
 </script>
 
-<style lang="sass">
+<style lang="sass" scoped>
 .VisualizationBarChart
   width: 100%
   height: 100%
