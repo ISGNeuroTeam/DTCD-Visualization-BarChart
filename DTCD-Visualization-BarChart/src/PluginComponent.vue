@@ -1,5 +1,9 @@
 <template>
-  <div class="barchart-container">
+  <div class="VisualizationBarChart">
+    <div v-if="isDataError" class="DataError">
+      <span class="FontIcon name_infoCircleOutline Icon"></span>
+      {{ errorMessage }}
+    </div>
     <div class="title" v-text="title"/>
     <div ref="svgContainer" class="svg-container"/>
   </div>
@@ -8,9 +12,7 @@
 <script>
 export default {
   name: 'PluginComponent',
-  data: (self) => ({
-    logSystem: self.$root.logSystem,
-    eventSystem: self.$root.eventSystem,
+  data: () => ({
     /** Chart technical data. */
     svg: null,
     width: 0,
@@ -23,9 +25,10 @@ export default {
     targetBar: null,
     secondBars: [],
     sortedBars: [],
-    targetBarColor: '#C6C6D4',
-    secondBarColor: '#6290C3',
+    targetBarColor: 'var(--border)',
+    secondBarColor: 'var(--aero)',
     isDataError: false,
+    dataAttr: '',
     errorMessage: '',
     /** Chart user data. */
     title: '',
@@ -34,6 +37,13 @@ export default {
     colLineValue: 'lineValue',
     dataset: [],
   }),
+  mounted() {
+    const { svgContainer } = this.$refs;
+    const attrs = svgContainer.getAttributeNames();
+    /** Used to support scoped styles. */
+    this.dataAttr = attrs.find(attr => attr.startsWith('data-'));
+    this.render();
+  },
   methods: {
     setTitle(text = '') {
       this.title = text;
@@ -55,6 +65,11 @@ export default {
       this.render()
     },
 
+    setDataset(data = []) {
+      this.dataset = data;
+      this.render();
+    },
+
     setError(text = '', show = false) {
       this.errorMessage = text;
       this.isDataError = show;
@@ -67,6 +82,7 @@ export default {
         return this.setError(error, true);
       }
 
+      this.setError('', false);
       this.$nextTick(() => {
         this.clearSvgContainer();
         this.prepareRenderData();
@@ -81,6 +97,20 @@ export default {
 
       if (dataset.length <= 0) {
         return { isValid: false, error: 'Нет данных для построения' };
+      }
+
+      const dsCols = Object.keys(dataset[0]);
+
+      if (!dsCols.includes(this.colValue)) {
+        return { isValid: false, error: `Отсутствует столбец данных ${this.colValue}` };
+      }
+
+      if (!dsCols.includes(this.colLineValue)) {
+        return { isValid: false, error: `Отсутствует столбец данных ${this.colLineValue}` };
+      }
+
+      if (dataset[0].name !== targetName) {
+        return { isValid: false, error: 'Неверное значение колонки "name"' };
       }
 
       return { isValid: true, error: '' };
@@ -103,11 +133,13 @@ export default {
 
       this.svg = d3.select(svgContainer)
         .append('svg')
+        .attr(this.dataAttr, '')
         .attr('class', 'content')
         .append('g')
         .attr('transform', `translate(${this.marginX}, ${this.marginY})`);
 
       this.svg.append('rect')
+        .attr(this.dataAttr, '')
         .attr('class', 'chart-back')
         .attr('x', 0)
         .attr('y', 0 - this.marginY)
@@ -142,13 +174,15 @@ export default {
         d3.select(this).remove();
       });
 
+      const dataAttr = this.dataAttr;
+
       axis.selectAll('.tick text').each(function() {
-        d3.select(this).attr('class', 'x-axis-tick-caption');
+        d3.select(this).attr(dataAttr, '').attr('class', 'x-axis-tick-caption');
       });
 
       const axisLine = d3.line()([[0, 0], [this.width, 0]]);
 
-      axis.select('.domain').attr('class', 'x-axis-line').attr('d', axisLine);
+      axis.select('.domain').attr(dataAttr, '').attr('class', 'x-axis-line').attr('d', axisLine);
     },
 
     createBars() {
@@ -191,7 +225,7 @@ export default {
         const diff = value - planVal;
         const x = barX - this.diffRectWidth;
         const y = barY < planY ? barY : barY - height;
-        const fill = diff > 0 ? '#4CD9641F' : '#FF3B301F';
+        const fill = diff > 0 ? 'var(--success_12)' : 'var(--danger_12)';
 
         this.svg.append('rect')
           .attr('x', x)
@@ -214,7 +248,12 @@ export default {
 
     addLineToBar(x, y, width, text) {
       const line = d3.line()([[x - 5, y], [x + width + 5, y]]);
-      this.svg.append('path').attr('class', 'risk-line').attr('d', line);
+      this.svg
+        .append('path')
+        .attr(this.dataAttr, '')
+        .attr('class', 'risk-line')
+        .attr('d', line);
+
       this.addTextElement(
         x + width / 2,
         y + 20,
@@ -224,13 +263,91 @@ export default {
     },
 
     addTextElement(x, y, text, className) {
-      const el = this.svg.append('text').attr('class', className)
+      const el = this.svg
+        .append('text')
+        .attr(this.dataAttr, '')
+        .attr('class', className);
+
       el.attr('x', x).attr('y', y).text(text);
     },
   },
 };
 </script>
 
-<style lang="sass">
-@import ./styles/component
+<style lang="sass" scoped>
+.VisualizationBarChart
+  width: 100%
+  height: 100%
+  display: flex
+  flex-direction: column
+  font-family: 'Proxima Nova'
+  position: relative
+
+  .DataError
+    position: absolute
+    display: flex
+    width: 100%
+    height: 100%
+    align-items: center
+    justify-content: center
+    flex-direction: column
+    color: var(--text_secondary)
+    background-color: var(--background_main)
+
+    .Icon
+      color: var(--border_secondary)
+      font-size: 100px
+      margin-bottom: 8px
+
+  .title
+    color: var(--text_main)
+    font-size: 18px
+    font-weight: 700
+    line-height: 25px
+    padding: 10px 16px
+
+  .svg-container
+    flex-grow: 1
+    overflow: hidden
+
+    .content
+      width: 100%
+      height: 100%
+
+      .chart-back
+        fill: var(--border_12)
+
+      .x-axis-tick-caption
+        fill: var(--text_main)
+        font-size: 15px
+        font-weight: 400
+
+      .x-axis-line
+        stroke: var(--border)
+        stroke-width: 1
+
+      .risk-line
+        stroke: var(--pink)
+        stroke-width: 3
+
+      .risk-line-caption
+        fill: var(--pink)
+        font-weight: 600
+        text-anchor: middle
+
+      .bar-value-caption
+        fill: var(--text_main)
+        font-weight: 600
+        text-anchor: middle
+
+      .diff-rect-caption
+        font-weight: 700
+        text-anchor: middle
+        alignment-baseline: central
+
+        &.plus
+          fill: var(--success)
+
+        &.minus
+          fill: var(--danger)
 </style>

@@ -11,16 +11,22 @@ import {
 
 export class VisualizationBarChart extends PanelPlugin {
 
-  #title;
-  #targetName;
-  #colValue;
-  #colLineValue;
-  #dataSourceName;
-  #storageSystem;
+  #id;
   #guid;
+  #logSystem;
   #eventSystem;
+  #storageSystem;
   #dataSourceSystem;
   #dataSourceSystemGUID;
+  #vueComponent;
+
+  #config = {
+    title: '',
+    targetName: 'План',
+    colValue: 'value',
+    colLineValue: 'lineValue',
+    dataSource: '',
+  };
 
   static getRegistrationMeta() {
     return pluginMeta;
@@ -29,12 +35,11 @@ export class VisualizationBarChart extends PanelPlugin {
   constructor(guid, selector) {
     super();
 
-    const logSystem = new LogSystemAdapter('0.5.0', guid, pluginMeta.name);
-    const eventSystem = new EventSystemAdapter('0.4.0', guid);
-
-    eventSystem.registerPluginInstance(this);
+    this.#id = `${pluginMeta.name}[${guid}]`;
     this.#guid = guid;
-    this.#eventSystem = eventSystem;
+    this.#logSystem = new LogSystemAdapter('0.5.0', guid, pluginMeta.name);
+    this.#eventSystem = new EventSystemAdapter('0.4.0', guid);
+    this.#eventSystem.registerPluginInstance(this);
     this.#storageSystem = new StorageSystemAdapter('0.5.0');
     this.#dataSourceSystem = new DataSourceSystemAdapter('0.2.0');
 
@@ -45,91 +50,85 @@ export class VisualizationBarChart extends PanelPlugin {
     const { default: VueJS } = this.getDependence('Vue');
 
     const view = new VueJS({
-      data: () => ({ guid, logSystem, eventSystem }),
+      data: () => ({}),
       render: h => h(PluginComponent),
     }).$mount(selector);
 
-    this.vueComponent = view.$children[0];
-    this.#title = '';
-    this.#targetName = 'План';
-    this.#colValue = 'value';
-    this.#colLineValue = 'lineValue';
-    this.#dataSourceName = '';
+    this.#vueComponent = view.$children[0];
+    this.#logSystem.debug(`${this.#id} initialization complete`);
+    this.#logSystem.info(`${this.#id} initialization complete`);
   }
 
   loadData(data) {
-    this.vueComponent.dataset = data;
-    this.vueComponent.render();
+    this.#vueComponent.setDataset(data);
   }
 
   processDataSourceEvent(eventData) {
     const { dataSource, status } = eventData;
-    this.#dataSourceName = dataSource;
-    const data = this.#storageSystem.session.getRecord(this.#dataSourceName);
+    const data = this.#storageSystem.session.getRecord(dataSource);
+    this.#logSystem.debug(
+      `${this.#id} process DataSourceStatusUpdate({ dataSource: ${dataSource}, status: ${status} })`
+    );
     this.loadData(data);
   }
 
   setPluginConfig(config = {}) {
-    const { title, targetName, dataSource, colValue, colLineValue } = config;
+    this.#logSystem.debug(`Set new config to ${this.#id}`);
+    this.#logSystem.info(`Set new config to ${this.#id}`);
 
-    if (typeof title !== 'undefined') {
-      this.#title = title;
-      this.vueComponent.setTitle(title);
-    }
+    const configProps = Object.keys(this.#config);
 
-    if (typeof targetName !== 'undefined') {
-      this.#targetName = targetName;
-      this.vueComponent.setTargetName(targetName);
-    }
+    for (const [prop, value] of Object.entries(config)) {
+      if (!configProps.includes(prop)) continue;
 
-    if (typeof colValue !== 'undefined') {
-      this.#colValue = colValue;
-      this.vueComponent.setColValue(colValue);
-    }
+      if (prop === 'title') this.#vueComponent.setTitle(value);
+      if (prop === 'targetName') this.#vueComponent.setTargetName(value);
+      if (prop === 'colValue') this.#vueComponent.setColValue(value);
+      if (prop === 'colLineValue') this.#vueComponent.setColLineValue(value);
 
-    if (typeof colLineValue !== 'undefined') {
-      this.#colLineValue = colLineValue;
-      this.vueComponent.setColLineValue(colLineValue);
-    }
+      if (prop === 'dataSource' && value) {
+        if (this.#config[prop]) {
+          this.#logSystem.debug(
+            `Unsubscribing ${this.#id} from DataSourceStatusUpdate({ dataSource: ${this.#config[prop]}, status: success })`
+          );
+          this.#eventSystem.unsubscribe(
+            this.#dataSourceSystemGUID,
+            'DataSourceStatusUpdate',
+            this.#guid,
+            'processDataSourceEvent',
+            { dataSource: this.#config[prop], status: 'success' },
+            );
+          }
 
-    if (typeof dataSource !== 'undefined') {
-      if (this.#dataSourceName) {
-        this.#eventSystem.unsubscribe(
+        const dsNewName = value;
+
+        this.#logSystem.debug(
+          `Subscribing ${this.#id} for DataSourceStatusUpdate({ dataSource: ${dsNewName}, status: success })`
+        );
+
+        this.#eventSystem.subscribe(
           this.#dataSourceSystemGUID,
           'DataSourceStatusUpdate',
           this.#guid,
           'processDataSourceEvent',
-          { dataSource: this.#dataSourceName, status: 'success' }
+          { dataSource: dsNewName, status: 'success' },
         );
+
+        const ds = this.#dataSourceSystem.getDataSource(dsNewName);
+
+        if (ds && ds.status === 'success') {
+          const data = this.#storageSystem.session.getRecord(dsNewName);
+          this.loadData(data);
+        }
       }
 
-      this.#dataSourceName = dataSource;
-
-      this.#eventSystem.subscribe(
-        this.#dataSourceSystemGUID,
-        'DataSourceStatusUpdate',
-        this.#guid,
-        'processDataSourceEvent',
-        { dataSource, status: 'success' }
-      );
-
-      const DS = this.#dataSourceSystem.getDataSource(this.#dataSourceName);
-
-      if (DS.status === 'success') {
-        const data = this.#storageSystem.session.getRecord(this.#dataSourceName);
-        this.loadData(data);
-      }
+      this.#config[prop] = value;
+      this.#logSystem.debug(`${this.#id} config prop value "${prop}" set to "${value}"`);
     }
   }
 
   getPluginConfig() {
-    const config = {};
-    if (this.#title) config.title = this.#title;
-    if (this.#dataSourceName) config.dataSource = this.#dataSourceName;
-    if (this.#targetName) config.targetName = this.#targetName;
-    if (this.#colValue) config.colValue = this.#colValue;
-    if (this.#colLineValue) config.colLineValue = this.#colLineValue;
-    return config;
+    return { ...this.#config };
   }
 
   setFormSettings(config) {
@@ -139,6 +138,10 @@ export class VisualizationBarChart extends PanelPlugin {
   getFormSettings() {
     return {
       fields: [
+        {
+          component: 'title',
+          propValue: 'Общие настройки',
+        },
         {
           component: 'title',
           propValue: 'Источник данных',
@@ -157,7 +160,6 @@ export class VisualizationBarChart extends PanelPlugin {
           propName: 'title',
           attrs: {
             label: 'Заголовок',
-            required: true,
           },
         },
         {
@@ -166,7 +168,6 @@ export class VisualizationBarChart extends PanelPlugin {
           attrs: {
             label: 'Имя колонки со значениями',
             propValue: 'value',
-            required: true,
           },
         },
         {
@@ -175,7 +176,6 @@ export class VisualizationBarChart extends PanelPlugin {
           attrs: {
             label: 'Имя колонки cо значениями для линий',
             propValue: 'lineValue',
-            required: true,
           },
         },
         {
@@ -184,7 +184,6 @@ export class VisualizationBarChart extends PanelPlugin {
           attrs: {
             label: 'Значение поля "name" записи целевого показателя',
             propValue: 'targetName',
-            required: true,
           },
         },
       ],
