@@ -55,14 +55,14 @@ export default {
       this.render();
     },
 
-    setColValue(key="value"){
+    setColValue(key = "value"){
       this.colValue = key;
       this.render();
     },
 
-    setColLineValue(key="lineValue"){
-      this.colLineValue=key;
-      this.render()
+    setColLineValue(key = "lineValue"){
+      this.colLineValue = key;
+      this.render();
     },
 
     setDataset(data = []) {
@@ -83,6 +83,7 @@ export default {
       }
 
       this.setError('', false);
+
       this.$nextTick(() => {
         this.clearSvgContainer();
         this.prepareRenderData();
@@ -109,8 +110,8 @@ export default {
         return { isValid: false, error: `Отсутствует столбец данных ${this.colLineValue}` };
       }
 
-      if (dataset[0].name !== targetName) {
-        return { isValid: false, error: 'Неверное значение колонки "name"' };
+      if (!dataset.find(b => b.name === targetName)) {
+        return { isValid: false, error: `Отсутвует столбец данных "name" со значением "${targetName}"` };
       }
 
       return { isValid: true, error: '' };
@@ -203,8 +204,8 @@ export default {
           const y = this.yScale(d[this.colValue]);
           const textX = x + barWidth / 2;
           const textY = y - 10;
-          const barLineY = this.yScale(d.lineValue);
-          this.addLineToBar(x, barLineY, barWidth, d.lineValue);
+          const barLineY = this.yScale(d[this.colLineValue]);
+          this.addLineToBar(x, barLineY, barWidth, d[this.colLineValue]);
           this.addTextElement(textX, textY, d[this.colValue], 'bar-value-caption');
           return barWidth;
         });
@@ -214,7 +215,8 @@ export default {
       const planVal = this.targetBar[this.colValue];
       const planY = this.yScale(planVal);
       for (const bar of this.secondBars) {
-        const { name, value } = bar;
+        const { name } = bar;
+        const value = bar[this.colValue];
 
         if (value === planVal) continue;
 
@@ -291,6 +293,8 @@ export default {
     align-items: center
     justify-content: center
     flex-direction: column
+    padding: 20px
+    text-align: center
     color: var(--text_secondary)
     background-color: var(--background_main)
 
