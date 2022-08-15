@@ -26,6 +26,8 @@ export class VisualizationBarChart extends PanelPlugin {
     colValue: 'value',
     colLineValue: 'lineValue',
     dataSource: '',
+    showSerifLines: false,
+    showRiskLine: false,
   };
 
   static getRegistrationMeta() {
@@ -85,6 +87,8 @@ export class VisualizationBarChart extends PanelPlugin {
       if (prop === 'targetName') this.#vueComponent.setTargetName(value);
       if (prop === 'colValue') this.#vueComponent.setColValue(value);
       if (prop === 'colLineValue') this.#vueComponent.setColLineValue(value);
+      if (prop === 'showSerifLines') this.#vueComponent.setShowSerifLines(value);
+      if (prop === 'showRiskLine') this.#vueComponent.setShowRiskLine(value);
 
       if (prop === 'dataSource' && value) {
         if (this.#config[prop]) {
@@ -184,6 +188,20 @@ export class VisualizationBarChart extends PanelPlugin {
           attrs: {
             label: 'Значение поля "name" записи целевого показателя',
             propValue: 'targetName',
+          },
+        },
+        {
+          component: 'switch',
+          propName: 'showSerifLines',
+          attrs: {
+            label: 'Включить линии-засечки на столбцах',
+          },
+        },
+        {
+          component: 'switch',
+          propName: 'showRiskLine',
+          attrs: {
+            label: 'Включить режим сравнения показателей',
           },
         },
       ],

@@ -65,6 +65,16 @@ export default {
       this.render();
     },
 
+    setShowSerifLines(val = false){
+      this.showSerifLines = val;
+      this.render();
+    },
+
+    setShowRiskLine(val = false){
+      this.showRiskLine = val;
+      this.render();
+    },
+
     setDataset(data = []) {
       this.dataset = data;
       this.render();
@@ -89,7 +99,9 @@ export default {
         this.prepareRenderData();
         this.createAxisX();
         this.createBars();
-        this.createDiffRects();
+        if (this.showSerifLines) {
+          this.createDiffRects();
+        }
       });
     },
 
@@ -204,8 +216,10 @@ export default {
           const y = this.yScale(d[this.colValue]);
           const textX = x + barWidth / 2;
           const textY = y - 10;
-          const barLineY = this.yScale(d[this.colLineValue]);
-          this.addLineToBar(x, barLineY, barWidth, d[this.colLineValue]);
+          if (this.showRiskLine) {
+            const barLineY = this.yScale(d[this.colLineValue]);
+            this.addLineToBar(x, barLineY, barWidth, d[this.colLineValue]);
+          }
           this.addTextElement(textX, textY, d[this.colValue], 'bar-value-caption');
           return barWidth;
         });

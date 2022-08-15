@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - chart rendering with non-standard field names
 
+## Added
+- the ability to enable/disable the indicator comparison mode
+- the ability to enable/disable serif lines on columns
+
 ## [0.3.0]
 
 ## Added
