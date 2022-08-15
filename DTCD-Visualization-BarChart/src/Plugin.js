@@ -28,6 +28,7 @@ export class VisualizationBarChart extends PanelPlugin {
     dataSource: '',
     showSerifLines: false,
     showRiskLine: false,
+    showAxisY: false,
   };
 
   static getRegistrationMeta() {
@@ -89,6 +90,7 @@ export class VisualizationBarChart extends PanelPlugin {
       if (prop === 'colLineValue') this.#vueComponent.setColLineValue(value);
       if (prop === 'showSerifLines') this.#vueComponent.setShowSerifLines(value);
       if (prop === 'showRiskLine') this.#vueComponent.setShowRiskLine(value);
+      if (prop === 'showAxisY') this.#vueComponent.setShowAxisY(value);
 
       if (prop === 'dataSource' && value) {
         if (this.#config[prop]) {
@@ -202,6 +204,13 @@ export class VisualizationBarChart extends PanelPlugin {
           propName: 'showRiskLine',
           attrs: {
             label: 'Включить режим сравнения показателей',
+          },
+        },
+        {
+          component: 'switch',
+          propName: 'showAxisY',
+          attrs: {
+            label: 'Включить ось Y',
           },
         },
       ],

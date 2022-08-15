@@ -28,7 +28,6 @@ export default {
     targetBarColor: 'var(--border)',
     secondBarColor: 'var(--aero)',
     isDataError: false,
-    dataAttr: '',
     errorMessage: '',
     /** Chart user data. */
     title: '',
@@ -39,9 +38,6 @@ export default {
   }),
   mounted() {
     const { svgContainer } = this.$refs;
-    const attrs = svgContainer.getAttributeNames();
-    /** Used to support scoped styles. */
-    this.dataAttr = attrs.find(attr => attr.startsWith('data-'));
     this.render();
   },
   methods: {
@@ -75,6 +71,11 @@ export default {
       this.render();
     },
 
+    setShowAxisY(val = false){
+      this.showAxisY = val;
+      this.render();
+    },
+
     setDataset(data = []) {
       this.dataset = data;
       this.render();
@@ -97,6 +98,9 @@ export default {
       this.$nextTick(() => {
         this.clearSvgContainer();
         this.prepareRenderData();
+        if (this.showAxisY) {
+          this.createAxisY();
+        }
         this.createAxisX();
         this.createBars();
         if (this.showSerifLines) {
@@ -146,13 +150,11 @@ export default {
 
       this.svg = d3.select(svgContainer)
         .append('svg')
-        .attr(this.dataAttr, '')
         .attr('class', 'content')
         .append('g')
         .attr('transform', `translate(${this.marginX}, ${this.marginY})`);
 
       this.svg.append('rect')
-        .attr(this.dataAttr, '')
         .attr('class', 'chart-back')
         .attr('x', 0)
         .attr('y', 0 - this.marginY)
@@ -178,6 +180,24 @@ export default {
       this.diffRectWidth = this.xScale.step() * paddingInner;
     },
 
+    createAxisY() {
+      const axis = this.svg.append('g')
+        .call(d3.axisRight(this.yScale));
+
+      axis.selectAll('.domain').remove();
+      axis.selectAll('.tick line').remove();
+      axis.selectAll('.tick text').attr('x', 0);
+
+      axis.selectAll('.tick')
+        .append('line')
+        .attr('class', 'y-axis-line')
+        .attr('x2', this.width)
+        .attr('x1', function () {
+          const textWidth = d3.select(this.parentElement).select('text').node().getBBox().width;
+          return textWidth + 8;
+        });
+    },
+
     createAxisX() {
       const axis = this.svg.append('g')
         .call(d3.axisBottom(this.xScale))
@@ -187,15 +207,13 @@ export default {
         d3.select(this).remove();
       });
 
-      const dataAttr = this.dataAttr;
-
       axis.selectAll('.tick text').each(function() {
-        d3.select(this).attr(dataAttr, '').attr('class', 'x-axis-tick-caption');
+        d3.select(this).attr('class', 'x-axis-tick-caption');
       });
 
       const axisLine = d3.line()([[0, 0], [this.width, 0]]);
 
-      axis.select('.domain').attr(dataAttr, '').attr('class', 'x-axis-line').attr('d', axisLine);
+      axis.select('.domain').attr('class', 'x-axis-line').attr('d', axisLine);
     },
 
     createBars() {
@@ -266,7 +284,6 @@ export default {
       const line = d3.line()([[x - 5, y], [x + width + 5, y]]);
       this.svg
         .append('path')
-        .attr(this.dataAttr, '')
         .attr('class', 'risk-line')
         .attr('d', line);
 
@@ -281,7 +298,6 @@ export default {
     addTextElement(x, y, text, className) {
       const el = this.svg
         .append('text')
-        .attr(this.dataAttr, '')
         .attr('class', className);
 
       el.attr('x', x).attr('y', y).text(text);
@@ -291,12 +307,12 @@ export default {
 </script>
 
 <style lang="sass" scoped>
-.VisualizationBarChart
+.VisualizationBarChart::v-deep
   width: 100%
   height: 100%
   display: flex
   flex-direction: column
-  font-family: 'Proxima Nova'
+  font-family: 'Proxima Nova', serif
   position: relative
 
   .DataError
@@ -341,6 +357,10 @@ export default {
         font-weight: 400
 
       .x-axis-line
+        stroke: var(--border)
+        stroke-width: 1
+
+      .y-axis-line
         stroke: var(--border)
         stroke-width: 1
 

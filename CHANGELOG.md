@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Added
 - the ability to enable/disable the indicator comparison mode
 - the ability to enable/disable serif lines on columns
+- the ability to enable/disable Y axis
 
 ## [0.3.0]
 
