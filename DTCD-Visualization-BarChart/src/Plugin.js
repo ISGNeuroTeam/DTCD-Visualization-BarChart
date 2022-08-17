@@ -28,7 +28,10 @@ export class VisualizationBarChart extends PanelPlugin {
     dataSource: '',
     showSerifLines: false,
     showRiskLine: false,
+    showAxisX: true,
     showAxisY: false,
+    horizontalMode: false,
+    colorsByRange: [],
   };
 
   static getRegistrationMeta() {
@@ -84,13 +87,9 @@ export class VisualizationBarChart extends PanelPlugin {
     for (const [prop, value] of Object.entries(config)) {
       if (!configProps.includes(prop)) continue;
 
-      if (prop === 'title') this.#vueComponent.setTitle(value);
-      if (prop === 'targetName') this.#vueComponent.setTargetName(value);
-      if (prop === 'colValue') this.#vueComponent.setColValue(value);
-      if (prop === 'colLineValue') this.#vueComponent.setColLineValue(value);
-      if (prop === 'showSerifLines') this.#vueComponent.setShowSerifLines(value);
-      if (prop === 'showRiskLine') this.#vueComponent.setShowRiskLine(value);
-      if (prop === 'showAxisY') this.#vueComponent.setShowAxisY(value);
+      if (this.#vueComponent.config.hasOwnProperty(prop)) {
+        this.#vueComponent.config[prop] = value;
+      }
 
       if (prop === 'dataSource' && value) {
         if (this.#config[prop]) {
@@ -208,10 +207,32 @@ export class VisualizationBarChart extends PanelPlugin {
         },
         {
           component: 'switch',
+          propName: 'showAxisX',
+          attrs: {
+            label: 'Включить шкалу X',
+          },
+        },
+        {
+          component: 'switch',
           propName: 'showAxisY',
           attrs: {
-            label: 'Включить ось Y',
+            label: 'Включить шкалу Y',
           },
+        },
+        {
+          component: 'switch',
+          propName: 'horizontalMode',
+          attrs: {
+            label: 'Горизонтальный вид графика',
+          },
+        },
+        {
+          component: 'title',
+          propValue: 'Настройка цветов',
+        },
+        {
+          component: 'gauge-segments',
+          propName: 'colorsByRange',
         },
       ],
     };
