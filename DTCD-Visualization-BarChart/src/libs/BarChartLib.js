@@ -18,7 +18,7 @@ export class BarChartLib {
 
   #config = {
     marginX: 16,
-    marginY: 35,
+    marginY: 16,
     paddingInner: .7,
     paddingOuter: .35,
     targetName: null,
@@ -66,6 +66,7 @@ export class BarChartLib {
       colValue,
       colLineValue,
       showAxisY,
+      showAxisX,
     } = this.#config;
 
     this.targetBar = this.dataset.find(b => b.name === targetName);
@@ -78,6 +79,10 @@ export class BarChartLib {
 
     this.#width = offsetWidth - marginX * 2;
     this.#height = offsetHeight - marginY * 2;
+
+    if (showAxisX) {
+      this.#height -= 16;
+    }
 
     if (horizontalMode) {
       this.#width -= 50
@@ -136,17 +141,20 @@ export class BarChartLib {
 
       this.#diffRectWidth = this.#xScale.step() * paddingInner;
     }
+    return true;
   }
 
   resize() {
     if (this.#chartArea) {
       this.clear();
-      this.render();
     }
+    this.render();
   }
 
   render() {
-    this.prepareRenderData();
+    if (!this.prepareRenderData()) {
+      return;
+    }
 
     const {
       showAxisX,

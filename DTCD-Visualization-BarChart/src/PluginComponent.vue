@@ -4,7 +4,10 @@
       <span class="FontIcon name_infoCircleOutline Icon"></span>
       {{ errorMessage }}
     </div>
-    <div class="title" v-text="config.title"/>
+    <div
+      v-if="config.title"
+      class="title"
+      v-text="config.title"/>
     <div ref="svgContainer" class="svg-container"/>
   </div>
 </template>
@@ -14,7 +17,8 @@ import {BarChartLib} from "./libs/BarChartLib";
 
 export default {
   name: 'PluginComponent',
-  data: () => ({
+  data: ({$root}) => ({
+    guid: $root.guid,
     /** Chart technical data. */
     isDataError: false,
     errorMessage: '',
@@ -74,11 +78,9 @@ export default {
 
       this.setError('', false);
 
-      this.$nextTick(() => {
-        this.chart.clear();
-        this.chart.setConfig(this.config);
-        this.chart.render();
-      });
+      this.chart.clear();
+      this.chart.setConfig(this.config);
+      this.chart.render();
     },
 
     validateData() {
@@ -102,11 +104,11 @@ export default {
         return { isValid: false, error: `Отсутствует столбец данных ${colValue}` };
       }
 
-      if (showRiskLine && !dsCols.includes(colLineValue)) {
+      if (showSerifLines && !dsCols.includes(colLineValue)) {
         return { isValid: false, error: `Отсутствует столбец данных ${colLineValue}` };
       }
 
-      if (showSerifLines && !dataset.find(b => b.name === targetName)) {
+      if (showRiskLine && !dataset.find(b => b.name === targetName)) {
         return { isValid: false, error: `Отсутвует столбец данных "name" со значением "${targetName}"` };
       }
 

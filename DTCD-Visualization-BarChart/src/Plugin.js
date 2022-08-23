@@ -86,50 +86,51 @@ export class VisualizationBarChart extends PanelPlugin {
 
     for (const [prop, value] of Object.entries(config)) {
       if (!configProps.includes(prop)) continue;
-
       if (this.#vueComponent.config.hasOwnProperty(prop)) {
         this.#vueComponent.config[prop] = value;
+        this.#config[prop] = value;
+        this.#logSystem.debug(`${this.#id} config prop value "${prop}" set to "${value}"`);
       }
+    }
 
-      if (prop === 'dataSource' && value) {
-        if (this.#config[prop]) {
-          this.#logSystem.debug(
-            `Unsubscribing ${this.#id} from DataSourceStatusUpdate({ dataSource: ${this.#config[prop]}, status: success })`
-          );
-          this.#eventSystem.unsubscribe(
-            this.#dataSourceSystemGUID,
-            'DataSourceStatusUpdate',
-            this.#guid,
-            'processDataSourceEvent',
-            { dataSource: this.#config[prop], status: 'success' },
-            );
-          }
-
-        const dsNewName = value;
-
+    if (Object.keys(config).includes('dataSource')) {
+      const prop = 'dataSource';
+      const dsNewName = config.dataSource;
+      if (this.#config[prop]) {
         this.#logSystem.debug(
-          `Subscribing ${this.#id} for DataSourceStatusUpdate({ dataSource: ${dsNewName}, status: success })`
+          `Unsubscribing ${this.#id} from DataSourceStatusUpdate({ dataSource: ${this.#config[prop]}, status: success })`
         );
-
-        this.#eventSystem.subscribe(
+        this.#eventSystem.unsubscribe(
           this.#dataSourceSystemGUID,
           'DataSourceStatusUpdate',
           this.#guid,
           'processDataSourceEvent',
-          { dataSource: dsNewName, status: 'success' },
+          { dataSource: this.#config[prop], status: 'success' },
         );
-
-        const ds = this.#dataSourceSystem.getDataSource(dsNewName);
-
-        if (ds && ds.status === 'success') {
-          const data = this.#storageSystem.session.getRecord(dsNewName);
-          this.loadData(data);
-        }
       }
+      this.#config[prop] = dsNewName;
 
-      this.#config[prop] = value;
-      this.#logSystem.debug(`${this.#id} config prop value "${prop}" set to "${value}"`);
+      this.#logSystem.debug(
+        `Subscribing ${this.#id} for DataSourceStatusUpdate({ dataSource: ${dsNewName}, status: success })`
+      );
+
+      this.#eventSystem.subscribe(
+        this.#dataSourceSystemGUID,
+        'DataSourceStatusUpdate',
+        this.#guid,
+        'processDataSourceEvent',
+        { dataSource: dsNewName, status: 'success' },
+      );
+
+      const ds = this.#dataSourceSystem.getDataSource(dsNewName);
+
+      if (ds && ds.status === 'success') {
+        const data = this.#storageSystem.session.getRecord(dsNewName);
+        this.loadData(data);
+      }
     }
+
+    this.#vueComponent.render();
   }
 
   getPluginConfig() {
