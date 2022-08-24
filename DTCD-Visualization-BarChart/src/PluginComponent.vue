@@ -151,7 +151,7 @@ export default {
     font-size: 18px
     font-weight: 700
     line-height: 25px
-    padding: 10px 16px
+    padding: 10px 16px 0
 
   .svg-container
     flex-grow: 1

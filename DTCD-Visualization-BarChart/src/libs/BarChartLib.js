@@ -67,6 +67,7 @@ export class BarChartLib {
       colLineValue,
       showAxisY,
       showAxisX,
+      showSerifLines,
     } = this.#config;
 
     this.targetBar = this.dataset.find(b => b.name === targetName);
@@ -80,7 +81,7 @@ export class BarChartLib {
     this.#width = offsetWidth - marginX * 2;
     this.#height = offsetHeight - marginY * 2;
 
-    if (showAxisX) {
+    if (showAxisX || showSerifLines) {
       this.#height -= 16;
     }
 
