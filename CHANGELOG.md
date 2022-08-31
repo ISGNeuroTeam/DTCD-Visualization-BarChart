@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added horizontal view of the graph display
 - added the ability to color histograms
 - added a property for rounding values on the graph
+- added a tooltip with values on columns
 
 ## [0.3.1]
 

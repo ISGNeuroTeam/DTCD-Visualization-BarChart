@@ -35,6 +35,7 @@ export class BarChartLib {
 
   constructor($svgContainer) {
     this.#svgContainer = $svgContainer;
+    this.createTooltip();
   }
 
   setConfig(obj) {
@@ -268,7 +269,15 @@ export class BarChartLib {
         .attr('y', y)
         .attr('width', this.#diffRectWidth)
         .attr('height', height)
-        .attr('fill', fill);
+        .attr('fill', fill)
+        .on('mouseover', (event, d) => {
+          this.tooltip
+            .text(`diff: ${sign + Math.abs(diff)}`)
+            .style('opacity', 1);
+          this.setTooltipPosition(event);
+        })
+        .on('mousemove', (event) => this.setTooltipPosition(event))
+        .on('mouseout', () => this.tooltip.style('opacity', 0));
 
       const sign = diff > 0 ? '+' : '-';
       const className = diff > 0 ? 'plus' : 'minus';
@@ -311,7 +320,15 @@ export class BarChartLib {
         .attr('y', y)
         .attr('width', width)
         .attr('height', this.#diffRectWidth)
-        .attr('fill', fill);
+        .attr('fill', fill)
+        .on('mouseover', (event, d) => {
+          this.tooltip
+            .text(`diff: ${sign + Math.abs(diff)}`)
+            .style('opacity', 1);
+          this.setTooltipPosition(event);
+        })
+        .on('mousemove', (event) => this.setTooltipPosition(event))
+        .on('mouseout', () => this.tooltip.style('opacity', 0));
 
       const sign = diff > 0 ? '+' : '-';
       const className = diff > 0 ? 'plus' : 'minus';
@@ -336,7 +353,15 @@ export class BarChartLib {
       .attr('d', horizontalMode
         ? d3.line()([[x, y - 5], [x, y + width + 5]])
         : d3.line()([[x - 5, y], [x + width + 5, y]])
-      );
+      )
+      .on('mouseover', (event, d) => {
+        this.tooltip
+          .text(`line: ${text}`)
+          .style('opacity', 1);
+        this.setTooltipPosition(event);
+      })
+      .on('mousemove', (event) => this.setTooltipPosition(event))
+      .on('mouseout', () => this.tooltip.style('opacity', 0));
 
     this.addTextElement(
       x + (horizontalMode ? 10 : width / 2),
@@ -349,6 +374,7 @@ export class BarChartLib {
   addTextElement(x, y, text, className) {
     const el = this.#chartArea
       .append('text')
+      .style('pointer-events', 'none')
       .attr('class', className);
 
     el.attr('x', x).attr('y', y).text(text);
@@ -412,7 +438,38 @@ export class BarChartLib {
           `bar-value-caption ${horizontalMode ? 'hor' : ''}`
         );
 
-      });
+      })
+      .on('mouseover', (event, d) => {
+        this.tooltip
+          .text(`${colValue}: ${d[colValue]}`)
+          .style('opacity', 1);
+        this.setTooltipPosition(event);
+      })
+      .on('mousemove', (event) => this.setTooltipPosition(event))
+      .on('mouseout', () => this.tooltip.style('opacity', 0));
+  }
+
+  setTooltipPosition(event) {
+    const box = this.tooltip.node().getBoundingClientRect();
+    this.tooltip
+      .style("left", (event.pageX - box.width / 2) + "px")
+      .style("top", (event.pageY - box.height - 16) + "px")
+  }
+
+  createTooltip() {
+    const styles = [
+      ['opacity', 0],
+      ['position', 'absolute'],
+      ['padding', '4px 8px'],
+      ['background', 'var(--background_main)'],
+      ['color', 'var(--text_main)'],
+      ['border', '1px solid var(--border)'],
+      ['border-radius', '3px'],
+      ['font-family', 'Proxima Nova'],
+    ];
+    this.tooltip = d3.select('#page').append('div')
+      .attr('class', 'tooltip');
+    styles.forEach(([prop, val]) => this.tooltip.style(prop, val));
   }
 
   roundValue(value) {
