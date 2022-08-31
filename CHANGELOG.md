@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the ability to enable/disable X and Y axis
 - added horizontal view of the graph display
 - added the ability to color histograms
+- added a property for rounding values on the graph
 
 ## [0.3.1]
 

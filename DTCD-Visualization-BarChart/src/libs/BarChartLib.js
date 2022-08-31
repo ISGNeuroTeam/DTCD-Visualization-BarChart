@@ -29,6 +29,7 @@ export class BarChartLib {
     showAxisX: true,
     showAxisY: false,
     horizontalMode: false,
+    roundValueTo: null,
     colorsByRange: [],
   };
 
@@ -275,7 +276,7 @@ export class BarChartLib {
       this.addTextElement(
         x + this.#diffRectWidth / 2,
         y + height / 2,
-        sign + Math.abs(diff),
+        this.roundValue(sign + Math.abs(diff)),
         `diff-rect-caption ${className}`,
       );
     }
@@ -318,7 +319,7 @@ export class BarChartLib {
       this.addTextElement(
         x + width / 2,
         y + this.#diffRectWidth / 2,
-        sign + Math.abs(diff),
+        this.roundValue(sign + Math.abs(diff)),
         `diff-rect-caption ${className}`,
       );
     }
@@ -340,7 +341,7 @@ export class BarChartLib {
     this.addTextElement(
       x + (horizontalMode ? 10 : width / 2),
       y + (horizontalMode ? width / 2 + 5 : 20),
-      text,
+      this.roundValue(text),
       `risk-line-caption ${horizontalMode ? 'hor' : ''}`,
     );
   }
@@ -407,11 +408,22 @@ export class BarChartLib {
         this.addTextElement(
           textX,
           textY,
-          d[colValue],
+          this.roundValue(d[colValue]),
           `bar-value-caption ${horizontalMode ? 'hor' : ''}`
         );
 
       });
+  }
+
+  roundValue(value) {
+    const {
+      roundValueTo,
+    } = this.#config;
+    const floatValue = Number.parseFloat(value);
+    if (!isNaN(floatValue)) {
+      return floatValue.toFixed(+roundValueTo)
+    }
+    return value;
   }
 
   getColorForValue(val) {

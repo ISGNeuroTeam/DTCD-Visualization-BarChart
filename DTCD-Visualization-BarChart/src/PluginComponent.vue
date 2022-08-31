@@ -35,6 +35,7 @@ export default {
       showAxisX: true,
       showAxisY: false,
       horizontalMode: false,
+      roundValueTo: '2',
       colorsByRange: [],
     },
   }),

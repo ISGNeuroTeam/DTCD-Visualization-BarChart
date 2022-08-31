@@ -31,6 +31,7 @@ export class VisualizationBarChart extends PanelPlugin {
     showAxisX: true,
     showAxisY: false,
     horizontalMode: false,
+    roundValueTo: '2',
     colorsByRange: [],
   };
 
@@ -226,6 +227,22 @@ export class VisualizationBarChart extends PanelPlugin {
           attrs: {
             label: 'Горизонтальный вид графика',
           },
+        },
+        {
+          component: 'select',
+          propName: 'roundValueTo',
+          attrs: {
+            label: 'Округлять значения на графике',
+          },
+          options: [
+            { label: '0', value: '0' },
+            { label: '0.0', value: '1' },
+            { label: '0.00', value: '2' },
+            { label: '0.000', value: '3' },
+            { label: '0.0000', value: '4' },
+            { label: '0.00000', value: '5' },
+            { label: '0.000000', value: '6' },
+          ],
         },
         {
           component: 'title',
