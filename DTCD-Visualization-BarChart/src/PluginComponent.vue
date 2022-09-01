@@ -40,6 +40,7 @@ export default {
   }),
   mounted() {
     this.chart = new BarChartLib(this.$refs.svgContainer);
+    this.chart.onClickBarplot = this.$root.publishEventClicked;
     this.render();
     this.resizeObserver = new ResizeObserver(this.onResize)
     this.resizeObserver.observe(this.$el)
