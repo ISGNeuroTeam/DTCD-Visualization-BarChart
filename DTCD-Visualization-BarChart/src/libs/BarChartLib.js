@@ -363,9 +363,11 @@ export class BarChartLib {
       .on('mousemove', (event) => this.setTooltipPosition(event))
       .on('mouseout', () => this.tooltip.style('opacity', 0));
 
+    const textYOffset = (!horizontalMode && y + 30 > this.#height) ? -10 : 20;
+
     this.addTextElement(
       x + (horizontalMode ? 10 : width / 2),
-      y + (horizontalMode ? width / 2 + 5 : 20),
+      y + (horizontalMode ? width / 2 + 5 : textYOffset),
       this.roundValue(text),
       `risk-line-caption ${horizontalMode ? 'hor' : ''}`,
     );
