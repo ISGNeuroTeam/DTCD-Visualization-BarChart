@@ -425,7 +425,7 @@ export class BarChartLib {
           textY += barWidth / 2 + 5;
         } else {
           textX += barWidth / 2;
-          textY -= 10;
+          textY -= 5;
         }
 
         if (showSerifLines) {
