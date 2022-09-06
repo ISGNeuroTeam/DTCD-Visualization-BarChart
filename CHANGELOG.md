@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added a property for rounding values on the graph
 - added a tooltip with values on columns
 
+### Fixed
+- fixed errors in the console when leaving the dashboard
+
 ## [0.3.1]
 
 ### Fixed
