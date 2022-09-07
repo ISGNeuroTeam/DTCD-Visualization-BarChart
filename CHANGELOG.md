@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added horizontal view of the graph display
 - added the ability to color histograms
 
+## Changed
+- Refactoring for new SDK version
+
 ## [0.3.1]
 
 ### Fixed

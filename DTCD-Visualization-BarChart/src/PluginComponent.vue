@@ -1,13 +1,13 @@
 <template>
-  <div class="VisualizationBarChart">
+  <div class="VisualizationBarChart" ref="VisualizationBarChart">
     <div v-if="isDataError" class="DataError">
       <span class="FontIcon name_infoCircleOutline Icon"></span>
       {{ errorMessage }}
     </div>
     <div
-      v-if="config.title"
+      v-if="title"
       class="title"
-      v-text="config.title"/>
+      v-text="title"/>
     <div ref="svgContainer" class="svg-container"/>
   </div>
 </template>
@@ -24,12 +24,12 @@ export default {
     errorMessage: '',
     /** Chart user data. */
     dataset: [],
+    title: '',
+    leftAxisWidth: 0,
     config: {
-      title: '',
       targetName: 'План',
       colValue: 'value',
       colLineValue: 'lineValue',
-      leftAxisWidth: 0,
       showSerifLines: false,
       showRiskLine: false,
       showAxisX: true,
@@ -37,17 +37,73 @@ export default {
       horizontalMode: false,
       colorsByRange: [],
     },
+    panelSize: {
+      height:200,
+      width:200
+    },
   }),
+  watch: {
+    panelSize: {
+      deep: true,
+      handler(val, old) {
+        if (JSON.stringify(val) !== JSON.stringify(old) && this.chart) {
+          this.onResize();
+        }
+      },
+    },
+  },
   mounted() {
     this.chart = new BarChartLib(this.$refs.svgContainer);
     this.render();
-    this.resizeObserver = new ResizeObserver(this.onResize)
-    this.resizeObserver.observe(this.$el)
-  },
-  beforeDestroy () {
-    this.resizeObserver.unobserve(this.$el)
+    const rect = this.$refs.VisualizationBarChart.getBoundingClientRect()
+    this.panelSize =  {
+      width: rect.width,
+      height: rect.height,
+    };
   },
   methods: {
+    setTitle(title = '') {
+      this.title = title;
+    },
+
+    setLeftAxisWidth(value = 0) {
+      this.leftAxisWidth = value;
+    },
+
+    setTargetName(name = 'План') {
+      this.config.targetName = name;
+    },
+
+    setColValue(value = 'value') {
+      this.config.colValue = value;
+    },
+
+    setColLineValue(value = 'lineValue') {
+      this.config.colLineValue = value;
+    },
+
+    setShowSerifLines(value = false) {
+      this.config.showSerifLines = value;
+    },
+    setShowRiskLine(value = false) {
+      this.config.showRiskLine = value;
+    },
+    setShowAxisX(value = true) {
+      this.config.showAxisX = value;
+    },
+    setShowAxisY(value = false) {
+      this.config.showAxisY = value;
+    },
+    setHorizontalMode(value = false) {
+      this.config.horizontalMode = value;
+    },
+    setColorsByRange(value = []) {
+      this.config.colorsByRange = value;
+    },
+
+    setPanelSize(panelSize) {
+      this.panelSize = panelSize
+    },
     onResize() {
       if (this.resizeTimeout) {
         clearTimeout(this.resizeTimeout);
