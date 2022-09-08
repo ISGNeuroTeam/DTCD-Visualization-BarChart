@@ -62,7 +62,7 @@ export class VisualizationBarChart extends PanelPlugin {
 
     this.#vue = new VueJS({
       data: () => ({
-        visible: false,
+        visible: true,
         dataset: [],
         config: { ...this.#config },
       }),

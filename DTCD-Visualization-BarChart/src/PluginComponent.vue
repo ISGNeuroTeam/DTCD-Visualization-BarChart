@@ -47,7 +47,9 @@ export default {
     config: {
       deep: true,
       handler() {
-        this.render();
+        this.$nextTick(() => {
+          this.render();
+        })
       },
     }
   },
