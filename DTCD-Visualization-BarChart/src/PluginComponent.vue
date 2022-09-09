@@ -22,21 +22,6 @@ export default {
     /** Chart technical data. */
     isDataError: false,
     errorMessage: '',
-    /** Chart user data. */
-    dataset: [],
-    config: {
-      title: '',
-      targetName: 'План',
-      colValue: 'value',
-      colLineValue: 'lineValue',
-      leftAxisWidth: 0,
-      showSerifLines: false,
-      showRiskLine: false,
-      showAxisX: true,
-      showAxisY: false,
-      horizontalMode: false,
-      colorsByRange: [],
-    },
   }),
   mounted() {
     this.chart = new BarChartLib(this.$refs.svgContainer);
@@ -48,6 +33,27 @@ export default {
   beforeDestroy () {
     this.resizeObserver.unobserve(this.$el)
   },
+  computed: {
+    config() {
+      return this.$root.config;
+    },
+    dataset() {
+      return this.$root.dataset;
+    },
+  },
+  watch: {
+    dataset() {
+      this.render();
+    },
+    config: {
+      deep: true,
+      handler() {
+        this.$nextTick(() => {
+          this.render();
+        })
+      },
+    }
+  },
   methods: {
     onResize() {
       if (this.resizeTimeout) {
@@ -57,12 +63,6 @@ export default {
         this.chart.resize();
         this.resizeTimeout = null;
       }, 50)
-    },
-
-    setDataset(data = []) {
-      this.dataset = data;
-      this.chart.setData(data);
-      this.render();
     },
 
     setError(text = '', show = false) {
@@ -81,6 +81,7 @@ export default {
 
       this.chart.clear();
       this.chart.setConfig(this.config);
+      this.chart.setData(this.dataset);
       this.chart.render();
     },
 

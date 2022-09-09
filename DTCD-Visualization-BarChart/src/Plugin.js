@@ -13,24 +13,28 @@ export class VisualizationBarChart extends PanelPlugin {
 
   #id;
   #guid;
+  #selector;
   #logSystem;
   #eventSystem;
   #storageSystem;
   #dataSourceSystem;
   #dataSourceSystemGUID;
-  #vueComponent;
+  #vue;
+  #lastVisible;
 
   #config = {
     title: '',
     targetName: 'План',
     colValue: 'value',
     colLineValue: 'lineValue',
+    leftAxisWidth: 0,
     dataSource: '',
     showSerifLines: false,
     showRiskLine: false,
     showAxisX: true,
     showAxisY: false,
     horizontalMode: false,
+    roundValueTo: '2',
     colorsByRange: [],
   };
 
@@ -43,6 +47,7 @@ export class VisualizationBarChart extends PanelPlugin {
 
     this.#id = `${pluginMeta.name}[${guid}]`;
     this.#guid = guid;
+    this.#selector = selector;
     this.#logSystem = new LogSystemAdapter('0.5.0', guid, pluginMeta.name);
     this.#eventSystem = new EventSystemAdapter('0.4.0', guid);
     this.#eventSystem.registerPluginInstance(this, ['Clicked']);
@@ -55,47 +60,55 @@ export class VisualizationBarChart extends PanelPlugin {
 
     const { default: VueJS } = this.getDependence('Vue');
 
-    const view = new VueJS({
-      data: () => ({}),
-      render: h => h(PluginComponent),
-      methods: {
-        publishEventClicked: (value) => {
-          this.#eventSystem.publishEvent('Clicked', value);
-        },
+    this.#vue = new VueJS({
+      data: () => ({
+        visible: true,
+        dataset: [],
+        config: { ...this.#config },
+      }),
+      render(h) {
+        return this.visible ? h(PluginComponent) : null;
       },
-    }).$mount(selector);
+      publishEventClicked: (value) => {
+        this.#eventSystem.publishEvent('Clicked', value);
+      },
+    });
 
-    this.#vueComponent = view.$children[0];
+    this.#vue.$mount(this.#selector);
+
     this.#logSystem.debug(`${this.#id} initialization complete`);
-    this.#logSystem.info(`${this.#id} initialization complete`);
   }
 
-  loadData(data) {
-    this.#vueComponent.setDataset(data);
+  beforeUninstall() {
+    this.#vue.$destroy();
+  }
+
+  setVisible(isVisible) {
+    if (this.#lastVisible !== isVisible) {
+      this.#vue.visible = isVisible;
+      this.#lastVisible = isVisible;
+    }
   }
 
   processDataSourceEvent(eventData) {
     const { dataSource, status } = eventData;
-    const data = this.#storageSystem.session.getRecord(dataSource);
-    this.#logSystem.debug(
-      `${this.#id} process DataSourceStatusUpdate({ dataSource: ${dataSource}, status: ${status} })`
-    );
-    this.loadData(data);
+    if (dataSource === this.#config.dataSource) {
+      this.#logSystem.debug(
+        `${this.#id} process DataSourceStatusUpdate({ dataSource: ${dataSource}, status: ${status} })`
+      );
+      this.#vue.dataset = this.#storageSystem.session.getRecord(dataSource);
+    }
   }
 
   setPluginConfig(config = {}) {
     this.#logSystem.debug(`Set new config to ${this.#id}`);
-    this.#logSystem.info(`Set new config to ${this.#id}`);
-
     const configProps = Object.keys(this.#config);
 
     for (const [prop, value] of Object.entries(config)) {
       if (!configProps.includes(prop)) continue;
-      if (this.#vueComponent.config.hasOwnProperty(prop)) {
-        this.#vueComponent.config[prop] = value;
-        this.#config[prop] = value;
-        this.#logSystem.debug(`${this.#id} config prop value "${prop}" set to "${value}"`);
-      }
+      this.#config[prop] = value;
+      this.#vue.config[prop] = value;
+      this.#logSystem.debug(`${this.#id} config prop value "${prop}" set to "${value}"`);
     }
 
     if (Object.keys(config).includes('dataSource')) {
@@ -130,12 +143,9 @@ export class VisualizationBarChart extends PanelPlugin {
       const ds = this.#dataSourceSystem.getDataSource(dsNewName);
 
       if (ds && ds.status === 'success') {
-        const data = this.#storageSystem.session.getRecord(dsNewName);
-        this.loadData(data);
+        this.#vue.dataset = this.#storageSystem.session.getRecord(dsNewName);
       }
     }
-
-    this.#vueComponent.render();
   }
 
   getPluginConfig() {
@@ -231,6 +241,22 @@ export class VisualizationBarChart extends PanelPlugin {
           attrs: {
             label: 'Горизонтальный вид графика',
           },
+        },
+        {
+          component: 'select',
+          propName: 'roundValueTo',
+          attrs: {
+            label: 'Округлять значения на графике',
+          },
+          options: [
+            { label: '0', value: '0' },
+            { label: '0.0', value: '1' },
+            { label: '0.00', value: '2' },
+            { label: '0.000', value: '3' },
+            { label: '0.0000', value: '4' },
+            { label: '0.00000', value: '5' },
+            { label: '0.000000', value: '6' },
+          ],
         },
         {
           component: 'title',
