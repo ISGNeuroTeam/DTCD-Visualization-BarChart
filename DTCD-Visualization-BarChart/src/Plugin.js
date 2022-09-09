@@ -13,24 +13,28 @@ export class VisualizationBarChart extends PanelPlugin {
 
   #id;
   #guid;
+  #selector;
   #logSystem;
   #eventSystem;
   #storageSystem;
   #dataSourceSystem;
   #dataSourceSystemGUID;
-  #vueComponent;
+  #vue;
+  #lastVisible;
 
   #config = {
     ...this.defaultConfig,
     targetName: 'План',
     colValue: 'value',
     colLineValue: 'lineValue',
+    leftAxisWidth: 0,
     dataSource: '',
     showSerifLines: false,
     showRiskLine: false,
     showAxisX: true,
     showAxisY: false,
     horizontalMode: false,
+    roundValueTo: '2',
     colorsByRange: [],
   };
 
@@ -43,9 +47,10 @@ export class VisualizationBarChart extends PanelPlugin {
 
     this.#id = `${pluginMeta.name}[${guid}]`;
     this.#guid = guid;
+    this.#selector = selector;
     this.#logSystem = new LogSystemAdapter('0.5.0', guid, pluginMeta.name);
     this.#eventSystem = new EventSystemAdapter('0.4.0', guid);
-    this.#eventSystem.registerPluginInstance(this);
+    this.#eventSystem.registerPluginInstance(this, ['Clicked']);
     this.#storageSystem = new StorageSystemAdapter('0.5.0');
     this.#dataSourceSystem = new DataSourceSystemAdapter('0.2.0');
 
@@ -55,90 +60,96 @@ export class VisualizationBarChart extends PanelPlugin {
 
     const { default: VueJS } = this.getDependence('Vue');
 
-    const view = new VueJS({
-      data: () => ({}),
-      render: h => h(PluginComponent),
-    }).$mount(selector);
+    this.#vue = new VueJS({
+      data: () => ({
+        visible: true,
+        dataset: [],
+        config: { ...this.#config },
+      }),
+      render(h) {
+        return this.visible ? h(PluginComponent) : null;
+      },
+      methods: {
+        publishEventClicked: (value) => {
+          this.#eventSystem.publishEvent('Clicked', value);
+        },
+      }
+    });
 
-    this.#vueComponent = view.$children[0];
-    this.setResizeObserver(this.#vueComponent.$el, this.#vueComponent.setPanelSize);
+    this.#vue.$mount(this.#selector);
+
+    this.setResizeObserver(this.#vue.$children[0].$el, this.#vue.$children[0].onResize);
 
     this.#logSystem.debug(`${this.#id} initialization complete`);
-    this.#logSystem.info(`${this.#id} initialization complete`);
   }
 
-  loadData(data) {
-    this.#vueComponent.setDataset(data);
+  beforeUninstall() {
+    this.#vue.$destroy();
+  }
+
+  setVisible(isVisible) {
+    if (this.#lastVisible !== isVisible) {
+      this.#vue.visible = isVisible;
+      this.#lastVisible = isVisible;
+    }
   }
 
   processDataSourceEvent(eventData) {
     const { dataSource, status } = eventData;
-    const data = this.#storageSystem.session.getRecord(dataSource);
-    this.#logSystem.debug(
-      `${this.#id} process DataSourceStatusUpdate({ dataSource: ${dataSource}, status: ${status} })`
-    );
-    this.loadData(data);
-  }
-
-  setVueComponentPropValue(prop, value) {
-    const methodName = `set${prop.charAt(0).toUpperCase() + prop.slice(1)}`;
-    if (this.#vueComponent[methodName]) {
-      this.#vueComponent[methodName](value)
-    } else {
-      throw new Error(`В компоненте отсутствует метод ${methodName} для присвоения свойства ${prop}`)
+    if (dataSource === this.#config.dataSource) {
+      this.#logSystem.debug(
+        `${this.#id} process DataSourceStatusUpdate({ dataSource: ${dataSource}, status: ${status} })`
+      );
+      this.#vue.dataset = this.#storageSystem.session.getRecord(dataSource);
     }
   }
 
   setPluginConfig(config = {}) {
     this.#logSystem.debug(`Set new config to ${this.#id}`);
-    this.#logSystem.info(`Set new config to ${this.#id}`);
-
     const configProps = Object.keys(this.#config);
 
     for (const [prop, value] of Object.entries(config)) {
       if (!configProps.includes(prop)) continue;
-
-      if (prop !== 'dataSource') {
-        this.setVueComponentPropValue(prop, value);
-      } else if (value) {
-        if (this.#config[prop]) {
-          this.#logSystem.debug(
-              `Unsubscribing ${this.#id} from DataSourceStatusUpdate({ dataSource: ${this.#config[prop]}, status: success })`
-          );
-          this.#eventSystem.unsubscribe(
-              this.#dataSourceSystemGUID,
-              'DataSourceStatusUpdate',
-              this.#guid,
-              'processDataSourceEvent',
-              { dataSource: this.#config[prop], status: 'success' },
-          );
-        }
-
-        const dsNewName = value;
-
-        this.#logSystem.debug(
-            `Subscribing ${this.#id} for DataSourceStatusUpdate({ dataSource: ${dsNewName}, status: success })`
-        );
-
-        this.#eventSystem.subscribe(
-            this.#dataSourceSystemGUID,
-            'DataSourceStatusUpdate',
-            this.#guid,
-            'processDataSourceEvent',
-            { dataSource: dsNewName, status: 'success' },
-        );
-
-        const ds = this.#dataSourceSystem.getDataSource(dsNewName);
-
-        if (ds && ds.status === 'success') {
-          const data = this.#storageSystem.session.getRecord(dsNewName);
-          this.loadData(data);
-        }
-      }
       this.#config[prop] = value;
+      this.#vue.config[prop] = value;
       this.#logSystem.debug(`${this.#id} config prop value "${prop}" set to "${value}"`);
     }
 
+    if (Object.keys(config).includes('dataSource')) {
+      const prop = 'dataSource';
+      const dsNewName = config.dataSource;
+      if (this.#config[prop]) {
+        this.#logSystem.debug(
+          `Unsubscribing ${this.#id} from DataSourceStatusUpdate({ dataSource: ${this.#config[prop]}, status: success })`
+        );
+        this.#eventSystem.unsubscribe(
+          this.#dataSourceSystemGUID,
+          'DataSourceStatusUpdate',
+          this.#guid,
+          'processDataSourceEvent',
+          { dataSource: this.#config[prop], status: 'success' },
+        );
+      }
+      this.#config[prop] = dsNewName;
+
+      this.#logSystem.debug(
+        `Subscribing ${this.#id} for DataSourceStatusUpdate({ dataSource: ${dsNewName}, status: success })`
+      );
+
+      this.#eventSystem.subscribe(
+        this.#dataSourceSystemGUID,
+        'DataSourceStatusUpdate',
+        this.#guid,
+        'processDataSourceEvent',
+        { dataSource: dsNewName, status: 'success' },
+      );
+
+      const ds = this.#dataSourceSystem.getDataSource(dsNewName);
+
+      if (ds && ds.status === 'success') {
+        this.#vue.dataset = this.#storageSystem.session.getRecord(dsNewName);
+      }
+    }
   }
 
   getPluginConfig() {
@@ -228,6 +239,22 @@ export class VisualizationBarChart extends PanelPlugin {
           attrs: {
             label: 'Горизонтальный вид графика',
           },
+        },
+        {
+          component: 'select',
+          propName: 'roundValueTo',
+          attrs: {
+            label: 'Округлять значения на графике',
+          },
+          options: [
+            { label: '0', value: '0' },
+            { label: '0.0', value: '1' },
+            { label: '0.00', value: '2' },
+            { label: '0.000', value: '3' },
+            { label: '0.0000', value: '4' },
+            { label: '0.00000', value: '5' },
+            { label: '0.000000', value: '6' },
+          ],
         },
         {
           component: 'title',
