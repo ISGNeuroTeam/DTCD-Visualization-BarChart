@@ -69,9 +69,11 @@ export class VisualizationBarChart extends PanelPlugin {
       render(h) {
         return this.visible ? h(PluginComponent) : null;
       },
-      publishEventClicked: (value) => {
-        this.#eventSystem.publishEvent('Clicked', value);
-      },
+      methods: {
+        publishEventClicked: (value) => {
+          this.#eventSystem.publishEvent('Clicked', value);
+        },
+      }
     });
 
     this.#vue.$mount(this.#selector);
