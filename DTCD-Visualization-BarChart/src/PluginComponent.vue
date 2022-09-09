@@ -5,9 +5,9 @@
       {{ errorMessage }}
     </div>
     <div
-      v-if="title"
+      v-if="config.title"
       class="title"
-      v-text="title"/>
+      v-text="config.title"/>
     <div ref="svgContainer" class="svg-container"/>
   </div>
 </template>
