@@ -78,8 +78,6 @@ export class VisualizationBarChart extends PanelPlugin {
 
     this.#vue.$mount(this.#selector);
 
-    this.setResizeObserver(this.#vue.$children[0].$el, this.#vue.$children[0].onResize);
-
     this.#logSystem.debug(`${this.#id} initialization complete`);
   }
 
