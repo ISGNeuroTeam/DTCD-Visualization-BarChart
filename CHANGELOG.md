@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED]
 
+- test
+
 ## Added
 - the ability to enable/disable the indicator comparison mode
 - the ability to enable/disable serif lines on columns
