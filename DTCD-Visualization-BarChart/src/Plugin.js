@@ -23,7 +23,7 @@ export class VisualizationBarChart extends PanelPlugin {
   #lastVisible;
 
   #config = {
-    title: '',
+    ...this.defaultConfig,
     targetName: 'План',
     colValue: 'value',
     colLineValue: 'lineValue',
@@ -178,13 +178,7 @@ export class VisualizationBarChart extends PanelPlugin {
             required: true,
           },
         },
-        {
-          component: 'text',
-          propName: 'title',
-          attrs: {
-            label: 'Заголовок',
-          },
-        },
+        ...this.defaultFields,
         {
           component: 'text',
           propName: 'colValue',
