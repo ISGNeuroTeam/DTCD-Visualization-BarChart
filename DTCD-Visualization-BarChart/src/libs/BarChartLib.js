@@ -15,6 +15,7 @@ export class BarChartLib {
   sortedBars = [];
   targetBarColor = 'var(--border)';
   secondBarColor = 'var(--aero)';
+  onClickBarplot;
 
   #config = {
     marginX: 16,
@@ -448,7 +449,12 @@ export class BarChartLib {
         this.setTooltipPosition(event);
       })
       .on('mousemove', (event) => this.setTooltipPosition(event))
-      .on('mouseout', () => this.tooltip.style('opacity', 0));
+      .on('mouseout', () => this.tooltip.style('opacity', 0))
+      .on('click', (event, d) => {
+        if (typeof this.onClickBarplot === 'function') {
+          this.onClickBarplot(d);
+        }
+      });
   }
 
   setTooltipPosition(event) {

@@ -50,7 +50,7 @@ export class VisualizationBarChart extends PanelPlugin {
     this.#selector = selector;
     this.#logSystem = new LogSystemAdapter('0.5.0', guid, pluginMeta.name);
     this.#eventSystem = new EventSystemAdapter('0.4.0', guid);
-    this.#eventSystem.registerPluginInstance(this);
+    this.#eventSystem.registerPluginInstance(this, ['Clicked']);
     this.#storageSystem = new StorageSystemAdapter('0.5.0');
     this.#dataSourceSystem = new DataSourceSystemAdapter('0.2.0');
 
@@ -69,6 +69,11 @@ export class VisualizationBarChart extends PanelPlugin {
       render(h) {
         return this.visible ? h(PluginComponent) : null;
       },
+      methods: {
+        publishEventClicked: (value) => {
+          this.#eventSystem.publishEvent('Clicked', value);
+        },
+      }
     });
 
     this.#vue.$mount(this.#selector);
