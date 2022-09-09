@@ -491,40 +491,6 @@ export class BarChartLib {
     return value;
   }
 
-  setTooltipPosition(event) {
-    const box = this.tooltip.node().getBoundingClientRect();
-    this.tooltip
-      .style("left", (event.pageX - box.width / 2) + "px")
-      .style("top", (event.pageY - box.height - 16) + "px")
-  }
-
-  createTooltip() {
-    const styles = [
-      ['opacity', 0],
-      ['position', 'absolute'],
-      ['padding', '4px 8px'],
-      ['background', 'var(--background_main)'],
-      ['color', 'var(--text_main)'],
-      ['border', '1px solid var(--border)'],
-      ['border-radius', '3px'],
-      ['font-family', 'Proxima Nova'],
-    ];
-    this.tooltip = d3.select('#page').append('div')
-      .attr('class', 'tooltip');
-    styles.forEach(([prop, val]) => this.tooltip.style(prop, val));
-  }
-
-  roundValue(value) {
-    const {
-      roundValueTo,
-    } = this.#config;
-    const floatValue = Number.parseFloat(value);
-    if (!isNaN(floatValue)) {
-      return floatValue.toFixed(+roundValueTo)
-    }
-    return value;
-  }
-
   getColorForValue(val) {
     const range = this.#config.colorsByRange
       .find(({range}) => val >= range[0] && val <= range[1]);
