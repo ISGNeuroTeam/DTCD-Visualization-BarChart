@@ -27,11 +27,7 @@ export default {
     this.chart = new BarChartLib(this.$refs.svgContainer);
     this.chart.onClickBarplot = this.$root.publishEventClicked;
     this.render();
-    this.resizeObserver = new ResizeObserver(this.onResize)
-    this.resizeObserver.observe(this.$el)
-  },
-  beforeDestroy () {
-    this.resizeObserver.unobserve(this.$el)
+    this.$root.$on('resize', this.onResize)
   },
   computed: {
     config() {
