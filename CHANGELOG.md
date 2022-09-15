@@ -16,12 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added a property for rounding values on the graph
 - added a tooltip with values on columns
 - click event when clicking on the item
+- added config for setting the x axis
 
 ### Fixed
 - fixed errors in the console when leaving the dashboard
 
 ## Changed
 - Refactoring for new SDK version
+- update configurations
 
 ## [0.3.1]
 

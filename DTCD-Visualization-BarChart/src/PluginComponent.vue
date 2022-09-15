@@ -86,11 +86,12 @@ export default {
 
       const {
         targetName,
+        xAxis,
         colValue,
         colLineValue,
-        showRiskLine,
         showSerifLines,
       } = this.config;
+      const showRiskLine = targetName !== '';
 
       if (dataset.length <= 0) {
         return { isValid: false, error: 'Нет данных для построения' };
@@ -106,8 +107,8 @@ export default {
         return { isValid: false, error: `Отсутствует столбец данных ${colLineValue}` };
       }
 
-      if (showRiskLine && !dataset.find(b => b.name === targetName)) {
-        return { isValid: false, error: `Отсутвует столбец данных "name" со значением "${targetName}"` };
+      if (showRiskLine && !dataset.find(b => `${b[xAxis]}` === targetName)) {
+        return { isValid: false, error: `Отсутвует столбец со значением "${targetName}"` };
       }
 
       return { isValid: true, error: '' };
