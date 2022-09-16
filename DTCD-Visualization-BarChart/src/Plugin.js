@@ -13,19 +13,29 @@ export class VisualizationBarChart extends PanelPlugin {
 
   #id;
   #guid;
+  #selector;
   #logSystem;
   #eventSystem;
   #storageSystem;
   #dataSourceSystem;
   #dataSourceSystemGUID;
-  #vueComponent;
+  #vue;
+  #lastVisible;
 
   #config = {
-    title: '',
+    ...this.defaultConfig,
     targetName: 'План',
     colValue: 'value',
     colLineValue: 'lineValue',
+    leftAxisWidth: 0,
     dataSource: '',
+    showSerifLines: false,
+    showRiskLine: false,
+    showAxisX: true,
+    showAxisY: false,
+    horizontalMode: false,
+    roundValueTo: '2',
+    colorsByRange: [],
   };
 
   static getRegistrationMeta() {
@@ -37,9 +47,10 @@ export class VisualizationBarChart extends PanelPlugin {
 
     this.#id = `${pluginMeta.name}[${guid}]`;
     this.#guid = guid;
+    this.#selector = selector;
     this.#logSystem = new LogSystemAdapter('0.5.0', guid, pluginMeta.name);
     this.#eventSystem = new EventSystemAdapter('0.4.0', guid);
-    this.#eventSystem.registerPluginInstance(this);
+    this.#eventSystem.registerPluginInstance(this, ['Clicked']);
     this.#storageSystem = new StorageSystemAdapter('0.5.0');
     this.#dataSourceSystem = new DataSourceSystemAdapter('0.2.0');
 
@@ -49,81 +60,96 @@ export class VisualizationBarChart extends PanelPlugin {
 
     const { default: VueJS } = this.getDependence('Vue');
 
-    const view = new VueJS({
-      data: () => ({}),
-      render: h => h(PluginComponent),
-    }).$mount(selector);
+    this.#vue = new VueJS({
+      data: () => ({
+        visible: true,
+        dataset: [],
+        config: { ...this.#config },
+      }),
+      render(h) {
+        return this.visible ? h(PluginComponent) : null;
+      },
+      methods: {
+        publishEventClicked: (value) => {
+          this.#eventSystem.publishEvent('Clicked', value);
+        },
+      }
+    }).$mount(this.#selector);
 
-    this.#vueComponent = view.$children[0];
+    this.setResizeObserver(this.#vue.$el, (size) => {
+      this.#vue.$emit('resize', size)
+    });
+
     this.#logSystem.debug(`${this.#id} initialization complete`);
-    this.#logSystem.info(`${this.#id} initialization complete`);
   }
 
-  loadData(data) {
-    this.#vueComponent.setDataset(data);
+  beforeUninstall() {
+    this.resizeObserver.unobserve(this.#vue.$el);
+    this.#vue.$destroy();
+  }
+
+  setVisible(isVisible) {
+    if (this.#lastVisible !== isVisible) {
+      this.#vue.visible = isVisible;
+      this.#lastVisible = isVisible;
+    }
   }
 
   processDataSourceEvent(eventData) {
     const { dataSource, status } = eventData;
-    const data = this.#storageSystem.session.getRecord(dataSource);
-    this.#logSystem.debug(
-      `${this.#id} process DataSourceStatusUpdate({ dataSource: ${dataSource}, status: ${status} })`
-    );
-    this.loadData(data);
+    if (dataSource === this.#config.dataSource) {
+      this.#logSystem.debug(
+        `${this.#id} process DataSourceStatusUpdate({ dataSource: ${dataSource}, status: ${status} })`
+      );
+      this.#vue.dataset = this.#storageSystem.session.getRecord(dataSource);
+    }
   }
 
   setPluginConfig(config = {}) {
     this.#logSystem.debug(`Set new config to ${this.#id}`);
-    this.#logSystem.info(`Set new config to ${this.#id}`);
-
     const configProps = Object.keys(this.#config);
 
     for (const [prop, value] of Object.entries(config)) {
       if (!configProps.includes(prop)) continue;
+      this.#config[prop] = value;
+      this.#vue.config[prop] = value;
+      this.#logSystem.debug(`${this.#id} config prop value "${prop}" set to "${value}"`);
+    }
 
-      if (prop === 'title') this.#vueComponent.setTitle(value);
-      if (prop === 'targetName') this.#vueComponent.setTargetName(value);
-      if (prop === 'colValue') this.#vueComponent.setColValue(value);
-      if (prop === 'colLineValue') this.#vueComponent.setColLineValue(value);
-
-      if (prop === 'dataSource' && value) {
-        if (this.#config[prop]) {
-          this.#logSystem.debug(
-            `Unsubscribing ${this.#id} from DataSourceStatusUpdate({ dataSource: ${this.#config[prop]}, status: success })`
-          );
-          this.#eventSystem.unsubscribe(
-            this.#dataSourceSystemGUID,
-            'DataSourceStatusUpdate',
-            this.#guid,
-            'processDataSourceEvent',
-            { dataSource: this.#config[prop], status: 'success' },
-            );
-          }
-
-        const dsNewName = value;
-
+    if (Object.keys(config).includes('dataSource')) {
+      const prop = 'dataSource';
+      const dsNewName = config.dataSource;
+      if (this.#config[prop]) {
         this.#logSystem.debug(
-          `Subscribing ${this.#id} for DataSourceStatusUpdate({ dataSource: ${dsNewName}, status: success })`
+          `Unsubscribing ${this.#id} from DataSourceStatusUpdate({ dataSource: ${this.#config[prop]}, status: success })`
         );
-
-        this.#eventSystem.subscribe(
+        this.#eventSystem.unsubscribe(
           this.#dataSourceSystemGUID,
           'DataSourceStatusUpdate',
           this.#guid,
           'processDataSourceEvent',
-          { dataSource: dsNewName, status: 'success' },
+          { dataSource: this.#config[prop], status: 'success' },
         );
-
-        const ds = this.#dataSourceSystem.getDataSource(dsNewName);
-
-        if (ds && ds.status === 'success') {
-          const data = this.#storageSystem.session.getRecord(dsNewName);
-          this.loadData(data);
-        }
       }
+      this.#config[prop] = dsNewName;
 
-      this.#config[prop] = value;
-      this.#logSystem.debug(`${this.#id} config prop value "${prop}" set to "${value}"`);
+      this.#logSystem.debug(
+        `Subscribing ${this.#id} for DataSourceStatusUpdate({ dataSource: ${dsNewName}, status: success })`
+      );
+
+      this.#eventSystem.subscribe(
+        this.#dataSourceSystemGUID,
+        'DataSourceStatusUpdate',
+        this.#guid,
+        'processDataSourceEvent',
+        { dataSource: dsNewName, status: 'success' },
+      );
+
+      const ds = this.#dataSourceSystem.getDataSource(dsNewName);
+
+      if (ds && ds.status === 'success') {
+        this.#vue.dataset = this.#storageSystem.session.getRecord(dsNewName);
+      }
     }
   }
 
@@ -155,13 +181,7 @@ export class VisualizationBarChart extends PanelPlugin {
             required: true,
           },
         },
-        {
-          component: 'text',
-          propName: 'title',
-          attrs: {
-            label: 'Заголовок',
-          },
-        },
+        ...this.defaultFields,
         {
           component: 'text',
           propName: 'colValue',
@@ -185,6 +205,65 @@ export class VisualizationBarChart extends PanelPlugin {
             label: 'Значение поля "name" записи целевого показателя',
             propValue: 'targetName',
           },
+        },
+        {
+          component: 'switch',
+          propName: 'showSerifLines',
+          attrs: {
+            label: 'Включить линии-засечки на столбцах',
+          },
+        },
+        {
+          component: 'switch',
+          propName: 'showRiskLine',
+          attrs: {
+            label: 'Включить режим сравнения показателей',
+          },
+        },
+        {
+          component: 'switch',
+          propName: 'showAxisX',
+          attrs: {
+            label: 'Включить шкалу X',
+          },
+        },
+        {
+          component: 'switch',
+          propName: 'showAxisY',
+          attrs: {
+            label: 'Включить шкалу Y',
+          },
+        },
+        {
+          component: 'switch',
+          propName: 'horizontalMode',
+          attrs: {
+            label: 'Горизонтальный вид графика',
+          },
+        },
+        {
+          component: 'select',
+          propName: 'roundValueTo',
+          attrs: {
+            label: 'Округлять значения на графике',
+          },
+          options: [
+            { label: '0', value: '0' },
+            { label: '0.0', value: '1' },
+            { label: '0.00', value: '2' },
+            { label: '0.000', value: '3' },
+            { label: '0.0000', value: '4' },
+            { label: '0.00000', value: '5' },
+            { label: '0.000000', value: '6' },
+          ],
+        },
+        {
+          component: 'title',
+          propValue: 'Настройка цветов',
+        },
+        {
+          component: 'gauge-segments',
+          propName: 'colorsByRange',
         },
       ],
     };
