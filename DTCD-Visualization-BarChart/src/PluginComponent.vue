@@ -107,7 +107,7 @@ export default {
       }
 
       if (showRiskLine && !dataset.find(b => b.name === targetName)) {
-        return { isValid: false, error: `Отсутвует столбец данных "name" со значением "${targetName}"` };
+        return { isValid: false, error: `Отсутствует столбец данных "name" со значением "${targetName}"` };
       }
 
       return { isValid: true, error: '' };
