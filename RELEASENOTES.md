@@ -1,6 +1,11 @@
+## [0.5.0]
+
+### Added
+- ability for setting the X axis
+
 ## [0.4.0]
 
-## Added
+### Added
 - the ability to enable/disable the indicator comparison mode
 - the ability to enable/disable serif lines on columns
 - the ability to enable/disable X and Y axis

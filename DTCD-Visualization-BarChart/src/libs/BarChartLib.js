@@ -23,9 +23,9 @@ export class BarChartLib {
     paddingInner: .7,
     paddingOuter: .35,
     targetName: null,
+    xAxis: 'name',
     colValue: 'value',
     colLineValue: 'lineValue',
-    showSerifLines: false,
     showRiskLine: false,
     showAxisX: true,
     showAxisY: false,
@@ -67,14 +67,14 @@ export class BarChartLib {
       paddingInner,
       paddingOuter,
       colValue,
+      xAxis,
       colLineValue,
       showAxisY,
       showAxisX,
-      showSerifLines,
     } = this.#config;
 
-    this.targetBar = this.dataset.find(b => b.name === targetName);
-    this.secondBars = this.dataset.filter(b => b.name !== targetName);
+    this.targetBar = this.dataset.find(b => `${b[xAxis]}` === `${targetName}`);
+    this.secondBars = this.dataset.filter(b => `${b[xAxis]}` !== `${targetName}`);
     this.sortedBars = [];
     if (this.targetBar) {
       this.sortedBars.push(this.targetBar)
@@ -84,7 +84,7 @@ export class BarChartLib {
     this.#width = offsetWidth - marginX * 2;
     this.#height = offsetHeight - marginY * 2;
 
-    if (showAxisX || showSerifLines) {
+    if (showAxisX || colLineValue !== '') {
       this.#height -= 16;
     }
 
@@ -98,20 +98,26 @@ export class BarChartLib {
       .append('g')
       .attr('transform', `translate(${marginX}, ${marginY})`);
 
-    const barValues = this.sortedBars.map(b => b[colValue]);
-    const lineValues = this.sortedBars.map(b => b[colLineValue]);
-    const maxY = d3.max([...barValues, ...lineValues]);
+    let maxY = d3.max(this.sortedBars.map(b => +b[colValue]));
+    if (colLineValue !== '') {
+      const lineValues = this.sortedBars.map(b => +b[colLineValue]);
+      maxY = d3.max([maxY, ...lineValues]);
+    }
 
     const valueDomain = [0, maxY];
-    const groupDomain = this.sortedBars.map(b => b.name);
+    const groupDomain = this.sortedBars.map(b => b[xAxis]);
 
+    this.#leftAxisWidth = 0;
     if (showAxisY) {
-      const axis = this.#svg.append('g')
-        .call(d3.axisLeft(d3.scaleBand().domain(horizontalMode ? groupDomain : valueDomain)));
-      this.#leftAxisWidth = axis.node().getBBox().width + 8;
+      this.#leftAxisWidth = horizontalMode ? 42 : 8;
+      const axis = this.#svg.append('g');
+      if (horizontalMode) {
+        axis.call(d3.axisLeft(d3.scaleBand().domain(groupDomain)));
+      } else {
+        axis.call(d3.axisLeft(d3.scaleLinear().domain(valueDomain)));
+      }
+      this.#leftAxisWidth += axis.node().getBBox().width;
       axis.remove();
-    } else {
-      this.#leftAxisWidth = 0;
     }
 
     const xRange = [0, this.#width - this.#leftAxisWidth];
@@ -163,9 +169,10 @@ export class BarChartLib {
     const {
       showAxisX,
       showAxisY,
-      showRiskLine,
+      targetName,
       horizontalMode,
     } = this.#config;
+    const showRiskLine = targetName !== '';
 
     showAxisY && this.createAxisY();
     showAxisX && this.createAxisX();
@@ -246,6 +253,10 @@ export class BarChartLib {
     const {
       colValue,
     } = this.#config;
+
+    if (!this.targetBar) {
+      return;
+    }
 
     const planVal = this.targetBar[colValue];
     const planY = this.#yScale(planVal);
@@ -386,8 +397,8 @@ export class BarChartLib {
   createBars() {
     const {
       horizontalMode,
-      showSerifLines,
       colValue,
+      xAxis,
       colLineValue,
       colorsByRange,
     } = this.#config;
@@ -399,8 +410,8 @@ export class BarChartLib {
       .enter()
       .append('rect')
       .attr('class', 'barplot')
-      .attr('x', d => this.#xScale(horizontalMode ? 0 : d.name))
-      .attr('y', d => this.#yScale(horizontalMode ? d.name : d[colValue]))
+      .attr('x', d => this.#xScale(horizontalMode ? 0 : d[xAxis]))
+      .attr('y', d => this.#yScale(horizontalMode ? d[xAxis] : d[colValue]))
       .attr('fill', d => {
         const {
           targetName,
@@ -411,14 +422,14 @@ export class BarChartLib {
         if (colorsByRange.length) {
           return this.getColorForValue(d[colValue]) || secondBarColor;
         }
-        return d.name === targetName ? targetBarColor : secondBarColor;
+        return d[xAxis] === targetName ? targetBarColor : secondBarColor;
       })
       .attr('height', (d) => horizontalMode ? barWidth : this.#height - this.#yScale(d[colValue]))
       .attr('width', d => horizontalMode ? this.#xScale(d[colValue]) : barWidth)
       .each((d) => {
 
-        const x = horizontalMode ? this.#xScale(d[colValue]) : this.#xScale(d.name);
-        let y = horizontalMode ? this.#yScale(d.name) : this.#yScale(d[colValue]);
+        const x = horizontalMode ? this.#xScale(d[colValue]) : this.#xScale(d[xAxis]);
+        let y = horizontalMode ? this.#yScale(d[xAxis]) : this.#yScale(d[colValue]);
         let textX = x;
         let textY = y;
         if (horizontalMode) {
@@ -429,7 +440,7 @@ export class BarChartLib {
           textY -= 5;
         }
 
-        if (showSerifLines) {
+        if (colLineValue !== '') {
           const barLineY = horizontalMode ? y : this.#yScale(d[colLineValue]);
           const barLineX = horizontalMode ? this.#xScale(d[colLineValue]) : x;
           this.addLineToBar(barLineX, barLineY, barWidth, d[colLineValue]);

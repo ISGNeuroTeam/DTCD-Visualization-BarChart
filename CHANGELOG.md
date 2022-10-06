@@ -5,9 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0]
+
+### Added
+- added config for setting the x axis
+
+### Changed
+- update configurations
+
 ## [0.4.0]
 
-## Added
+### Added
 - the ability to enable/disable the indicator comparison mode
 - the ability to enable/disable serif lines on columns
 - the ability to enable/disable X and Y axis
@@ -20,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - fixed errors in the console when leaving the dashboard
 
-## Changed
+### Changed
 - Refactoring for new SDK version
 
 ## [0.3.1]
@@ -30,11 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.0]
 
-## Added
+### Added
 - logging
 - missing data message
 
-## Changed
+### Changed
 - layout styles
 - panel config logic
 

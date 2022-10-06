@@ -24,13 +24,12 @@ export class VisualizationBarChart extends PanelPlugin {
 
   #config = {
     ...this.defaultConfig,
-    targetName: 'План',
+    targetName: '',
+    xAxis: 'name',
     colValue: 'value',
-    colLineValue: 'lineValue',
+    colLineValue: '',
     leftAxisWidth: 0,
     dataSource: '',
-    showSerifLines: false,
-    showRiskLine: false,
     showAxisX: true,
     showAxisY: false,
     horizontalMode: false,
@@ -153,12 +152,57 @@ export class VisualizationBarChart extends PanelPlugin {
     }
   }
 
+  getDataFields() {
+    const {
+      dataSource,
+    } = this.#config;
+    const data = this.#storageSystem.session.getRecord(dataSource);
+    return data ? Object.keys(data[0]) : [];
+  }
+
+  getSelectFieldsField(propName, label) {
+    const fields = this.getDataFields();
+    const curValue = this.#config[propName] || null;
+    const emptyItem = { label: '--Нет--', value: '' };
+    const options = [
+      emptyItem,
+      ...fields.map((name) => ({
+        label: name,
+        value: name,
+      })),
+    ];
+
+    if (typeof curValue === 'string' && !fields.includes(curValue)) {
+      options.push({
+        label: `Сохраненное: ${curValue}`,
+        value: curValue,
+      });
+    }
+
+    return {
+      component: fields.length ? 'select' : 'text',
+      options,
+      propName,
+      attrs: {
+        label,
+      },
+    }
+  }
+
   getPluginConfig() {
     return { ...this.#config };
   }
 
   setFormSettings(config) {
-    this.setPluginConfig(config);
+    const cleanConfig = {};
+    Object.keys(config).forEach((name) => {
+      if (config[name] === '--Нет--') {
+        cleanConfig[name] = '';
+        return;
+      }
+      cleanConfig[name] = config[name];
+    })
+    this.setPluginConfig(cleanConfig);
   }
 
   getFormSettings() {
@@ -182,42 +226,17 @@ export class VisualizationBarChart extends PanelPlugin {
           },
         },
         ...this.defaultFields,
-        {
-          component: 'text',
-          propName: 'colValue',
-          attrs: {
-            label: 'Имя колонки со значениями',
-            propValue: 'value',
-          },
-        },
-        {
-          component: 'text',
-          propName: 'colLineValue',
-          attrs: {
-            label: 'Имя колонки cо значениями для линий',
-            propValue: 'lineValue',
-          },
-        },
+
+        this.getSelectFieldsField('xAxis', 'Имя колонки с названием столбцов'),
+        this.getSelectFieldsField('colValue', 'Имя колонки со значением'),
+        this.getSelectFieldsField('colLineValue', 'Имя колонки для линии на столбцах'),
+
         {
           component: 'text',
           propName: 'targetName',
           attrs: {
-            label: 'Значение поля "name" записи целевого показателя',
+            label: 'Название целевого указателя',
             propValue: 'targetName',
-          },
-        },
-        {
-          component: 'switch',
-          propName: 'showSerifLines',
-          attrs: {
-            label: 'Включить линии-засечки на столбцах',
-          },
-        },
-        {
-          component: 'switch',
-          propName: 'showRiskLine',
-          attrs: {
-            label: 'Включить режим сравнения показателей',
           },
         },
         {
