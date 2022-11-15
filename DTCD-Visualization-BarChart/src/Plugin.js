@@ -289,12 +289,17 @@ export class VisualizationBarChart extends PanelPlugin {
   }
   
   getState() {
-    return this.getPluginConfig();
+    return Object.assign(
+      this.getPluginConfig(),
+      { dataset: this.#vue.dataset },
+    );
   }
 
   setState(newState) {
     if (typeof newState !== 'object' ) return;
 
     this.setPluginConfig(newState);
+
+    if (newState.dataset) this.#vue.dataset = newState.dataset;
   }
 }
