@@ -287,5 +287,26 @@ export class VisualizationBarChart extends PanelPlugin {
       ],
     };
   }
+  
+  getState() {
+    return Object.assign(
+      this.getPluginConfig(),
+      { dataset: this.#vue.dataset },
+    );
+  }
 
+  setState(newState) {
+    if (typeof newState !== 'object' ) return;
+
+    this.setPluginConfig(newState);
+
+    const vueNamesFields = [
+      'dataset',
+    ];
+
+    for (const [prop, value] of Object.entries(newState)) {
+      if (!vueNamesFields.includes(prop)) continue;
+      this.#vue[prop] = value;
+    }
+  }
 }
