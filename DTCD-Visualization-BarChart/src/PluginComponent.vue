@@ -149,8 +149,8 @@ export default {
     color: var(--text_main)
     font-size: 18px
     font-weight: 700
-    line-height: 25px
-    padding: 10px 16px 0
+    line-height: 1.4
+    padding: 10px
 
   .svg-container
     flex-grow: 1
