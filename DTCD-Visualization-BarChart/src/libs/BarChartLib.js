@@ -32,6 +32,8 @@ export class BarChartLib {
     horizontalMode: false,
     roundValueTo: null,
     colorsByRange: [],
+    riskLineColor: 'var(--pink)',
+    riskLineCaptionColor: 'var(--pink)',
   };
 
   constructor($svgContainer) {
@@ -241,7 +243,7 @@ export class BarChartLib {
       axis.select('.domain')
         .attr('class', 'x-axis-line')
         .attr('d', d3.line()([[0, 0], [this.#width - this.#leftAxisWidth, 0]]));
-
+           
     }
   }
 
@@ -357,11 +359,13 @@ export class BarChartLib {
   addLineToBar(x, y, width, text) {
     const {
       horizontalMode,
+      riskLineColor,
     } = this.#config;
 
     this.#chartArea
       .append('path')
       .attr('class', 'risk-line')
+      .attr('style', `stroke: ${riskLineColor}`)
       .attr('d', horizontalMode
         ? d3.line()([[x, y - 5], [x, y + width + 5]])
         : d3.line()([[x - 5, y], [x + width + 5, y]])
@@ -382,15 +386,23 @@ export class BarChartLib {
       y + (horizontalMode ? width / 2 + 5 : textYOffset),
       this.roundValue(text),
       `risk-line-caption ${horizontalMode ? 'hor' : ''}`,
+      true
     );
   }
 
-  addTextElement(x, y, text, className) {
+  addTextElement(x, y, text, className, isLineCaption) {
+    const {
+      riskLineCaptionColor,
+    } = this.#config;
+
     const el = this.#chartArea
       .append('text')
-      .style('pointer-events', 'none')
-      .attr('class', className);
+      .attr('class', className)
+      .style('pointer-events', 'none');
 
+    if (isLineCaption) {
+      el.attr('style', `fill: ${riskLineCaptionColor}`)
+    }
     el.attr('x', x).attr('y', y).text(text);
   }
 

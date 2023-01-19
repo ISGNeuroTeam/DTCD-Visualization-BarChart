@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - plugin state API
+- ability to change the color of lines on columns and captions
 
 ## Changed
 

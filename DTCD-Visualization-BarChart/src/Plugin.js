@@ -35,6 +35,8 @@ export class VisualizationBarChart extends PanelPlugin {
     horizontalMode: false,
     roundValueTo: '2',
     colorsByRange: [],
+    riskLineColor: 'var(--pink)',
+    riskLineCaptionColor: 'var(--pink)',
   };
 
   static getRegistrationMeta() {
@@ -283,6 +285,20 @@ export class VisualizationBarChart extends PanelPlugin {
         {
           component: 'gauge-segments',
           propName: 'colorsByRange',
+        },
+        {
+          component: 'colorpicker',
+          propName: 'riskLineColor',
+          attrs: {
+            label: 'Цвет засечек на столбцах',
+          },
+        },
+        {
+          component: 'colorpicker',
+          propName: 'riskLineCaptionColor',
+          attrs: {
+            label: 'Цвет подписи для засечек на столбцах',
+          },
         },
       ],
     };

@@ -175,11 +175,9 @@ export default {
         stroke-width: .5
 
       .risk-line
-        stroke: var(--pink)
         stroke-width: 3
 
       .risk-line-caption
-        fill: var(--pink)
         font-weight: 600
         text-anchor: middle
         &.hor
