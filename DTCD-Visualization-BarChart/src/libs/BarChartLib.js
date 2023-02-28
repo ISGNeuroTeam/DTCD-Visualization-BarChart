@@ -9,6 +9,7 @@ export class BarChartLib {
   #width = 200;
   #height = 200;
   #diffRectWidth = null;
+  #maxY;
 
   dataset = [];
   secondBars = [];
@@ -100,13 +101,13 @@ export class BarChartLib {
       .append('g')
       .attr('transform', `translate(${marginX}, ${marginY})`);
 
-    let maxY = d3.max(this.sortedBars.map(b => +b[colValue]));
+    this.#maxY = d3.max(this.sortedBars.map(b => +b[colValue]));
     if (colLineValue !== '') {
       const lineValues = this.sortedBars.map(b => +b[colLineValue]);
-      maxY = d3.max([maxY, ...lineValues]);
+      this.#maxY = d3.max([this.#maxY, ...lineValues]);
     }
 
-    const valueDomain = [0, maxY];
+    const valueDomain = [0, this.#maxY];
     const groupDomain = this.sortedBars.map(b => b[xAxis]);
 
     this.#leftAxisWidth = 0;
@@ -221,10 +222,18 @@ export class BarChartLib {
   createAxisX() {
     const {
       horizontalMode,
+      paddingOuter,
     } = this.#config;
 
+    const paddingXOfChart = paddingOuter;
+    const sizeOfChar = 10;
+    const paddingXOfChar = 16;
+    const sizeOfNumber = String(this.#maxY).length * sizeOfChar + paddingXOfChar;
+    const countTicks = (this.#width - paddingXOfChart) / sizeOfNumber;
+
     const axis = this.#svg.append('g')
-      .call(d3.axisBottom(this.#xScale))
+      .call(d3.axisBottom(this.#xScale)
+              .ticks(countTicks))
       .attr('transform', `translate(${this.#leftAxisWidth}, ${this.#height})`);
 
     axis.selectAll('.tick text')
@@ -243,7 +252,6 @@ export class BarChartLib {
       axis.select('.domain')
         .attr('class', 'x-axis-line')
         .attr('d', d3.line()([[0, 0], [this.#width - this.#leftAxisWidth, 0]]));
-           
     }
   }
 
