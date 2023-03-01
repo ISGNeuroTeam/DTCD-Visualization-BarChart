@@ -252,6 +252,19 @@ export class BarChartLib {
       axis.select('.domain')
         .attr('class', 'x-axis-line')
         .attr('d', d3.line()([[0, 0], [this.#width - this.#leftAxisWidth, 0]]));
+
+      // считаем количество символов всех надписей, чтобы примерно посчитать их ширину
+      let countChars = 0;
+      axis.selectAll('.tick').nodes().forEach((tickItem) => {
+        countChars += tickItem.textContent.length;
+      });
+
+      // если надписи не помещаются, то проворачиваем их на 45 градусов
+      if (countChars * sizeOfChar >= this.#width) {
+        axis.selectAll('.tick text')
+          .attr('text-anchor', 'start')
+          .attr('transform', 'translate(8, -2) rotate(45)');
+      }
     }
   }
 
