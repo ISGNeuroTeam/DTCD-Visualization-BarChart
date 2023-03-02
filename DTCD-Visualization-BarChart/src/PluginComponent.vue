@@ -154,6 +154,7 @@ export default {
 
   .svg-container
     flex-grow: 1
+    padding: 10px
     overflow: hidden
 
     .content

@@ -19,8 +19,8 @@ export class BarChartLib {
   onClickBarplot;
 
   #config = {
-    marginX: 16,
-    marginY: 16,
+    marginX: 10,
+    marginY: 10,
     paddingInner: .7,
     paddingOuter: .35,
     targetName: null,
@@ -88,7 +88,8 @@ export class BarChartLib {
     this.#height = offsetHeight - marginY * 2;
 
     if (showAxisX || colLineValue !== '') {
-      this.#height -= 16;
+      const heightOfAxisX = 19;
+      this.#height -= heightOfAxisX;
     }
 
     if (horizontalMode) {
@@ -99,7 +100,7 @@ export class BarChartLib {
       .append('svg')
       .attr('class', 'content')
       .append('g')
-      .attr('transform', `translate(${marginX}, ${marginY})`);
+      .attr('transform', `translate(0, ${marginY})`);
 
     this.#maxY = d3.max(this.sortedBars.map(b => +b[colValue]));
     if (colLineValue !== '') {
@@ -193,6 +194,18 @@ export class BarChartLib {
     }
 
     this.createBars();
+
+    // адаптируем график по ширине и высоте,
+    // чтобы помещался во внешнем блоке
+    const svgHtml = this.#svgContainer.querySelector('svg');
+    if (svgHtml) {
+      const {
+        scrollWidth,
+        scrollHeight,
+      } = svgHtml;
+      
+      svgHtml.setAttribute('viewBox', `0 0 ${scrollWidth} ${scrollHeight}`);
+    }
   }
 
   createAxisY() {
@@ -260,7 +273,8 @@ export class BarChartLib {
       });
 
       // если надписи не помещаются, то проворачиваем их на 45 градусов
-      if (countChars * sizeOfChar >= this.#width) {
+      const paddingXOfLabelChar = 3;
+      if (countChars * (sizeOfChar + paddingXOfLabelChar) >= this.#width) {
         axis.selectAll('.tick text')
           .attr('text-anchor', 'start')
           .attr('transform', 'translate(8, -2) rotate(45)');
