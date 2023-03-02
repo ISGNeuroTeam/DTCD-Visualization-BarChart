@@ -215,8 +215,13 @@ export class BarChartLib {
       horizontalMode,
     } = this.#config;
 
+    const heightOfChar = 20;
+    const paddingYOfChar = 3;
+    const countTicks = this.#height / (heightOfChar + paddingYOfChar);
+
     const axis = this.#svg.append('g')
-      .call(d3.axisLeft(this.#yScale))
+      .call(d3.axisLeft(this.#yScale)
+              .ticks(countTicks))
       .attr('transform', `translate(${this.#leftAxisWidth}, 0)`);
 
     axis.selectAll('.domain')
