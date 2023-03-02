@@ -87,9 +87,23 @@ export class BarChartLib {
     this.#width = offsetWidth - marginX * 2;
     this.#height = offsetHeight - marginY * 2;
 
+    // отступ снизу для оси Х
     if (showAxisX || colLineValue !== '') {
-      const heightOfAxisX = 19;
-      this.#height -= heightOfAxisX;
+      if (horizontalMode) {
+        this.#height -= 22;
+      } else {
+        let maxLengthOfName = 0;
+        this.dataset.forEach((dataItem) => {
+          if (dataItem.name?.length > maxLengthOfName) {
+            maxLengthOfName = dataItem.name.length;
+          }
+        });
+  
+        const sizeOfChar = 10;
+        const heightOfAxisX = maxLengthOfName * sizeOfChar;
+        this.#height -= heightOfAxisX + marginY;
+        this.#width -= (maxLengthOfName * sizeOfChar) / 2;
+      }
     }
 
     if (horizontalMode) {
@@ -100,7 +114,7 @@ export class BarChartLib {
       .append('svg')
       .attr('class', 'content')
       .append('g')
-      .attr('transform', `translate(0, ${marginY})`);
+      .attr('transform', `translate(0, ${horizontalMode ? 0 : marginY})`);
 
     this.#maxY = d3.max(this.sortedBars.map(b => +b[colValue]));
     if (colLineValue !== '') {
@@ -194,18 +208,6 @@ export class BarChartLib {
     }
 
     this.createBars();
-
-    // адаптируем график по ширине и высоте,
-    // чтобы помещался во внешнем блоке
-    const svgHtml = this.#svgContainer.querySelector('svg');
-    if (svgHtml) {
-      const {
-        scrollWidth,
-        scrollHeight,
-      } = svgHtml;
-      
-      svgHtml.setAttribute('viewBox', `0 0 ${scrollWidth} ${scrollHeight}`);
-    }
   }
 
   createAxisY() {
