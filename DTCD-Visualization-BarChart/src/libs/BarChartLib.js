@@ -9,6 +9,7 @@ export class BarChartLib {
   #width = 200;
   #height = 200;
   #diffRectWidth = null;
+  #maxY;
 
   dataset = [];
   secondBars = [];
@@ -18,8 +19,8 @@ export class BarChartLib {
   onClickBarplot;
 
   #config = {
-    marginX: 16,
-    marginY: 16,
+    marginX: 10,
+    marginY: 10,
     paddingInner: .7,
     paddingOuter: .35,
     targetName: null,
@@ -86,8 +87,23 @@ export class BarChartLib {
     this.#width = offsetWidth - marginX * 2;
     this.#height = offsetHeight - marginY * 2;
 
+    // отступ снизу для оси Х
     if (showAxisX || colLineValue !== '') {
-      this.#height -= 16;
+      if (horizontalMode) {
+        this.#height -= 22;
+      } else {
+        let maxLengthOfName = 0;
+        this.dataset.forEach((dataItem) => {
+          if (dataItem.name?.length > maxLengthOfName) {
+            maxLengthOfName = dataItem.name.length;
+          }
+        });
+  
+        const sizeOfChar = 10;
+        const heightOfAxisX = maxLengthOfName * sizeOfChar;
+        this.#height -= heightOfAxisX + marginY;
+        this.#width -= (maxLengthOfName * sizeOfChar) / 2;
+      }
     }
 
     if (horizontalMode) {
@@ -98,15 +114,15 @@ export class BarChartLib {
       .append('svg')
       .attr('class', 'content')
       .append('g')
-      .attr('transform', `translate(${marginX}, ${marginY})`);
+      .attr('transform', `translate(0, ${horizontalMode ? 0 : marginY})`);
 
-    let maxY = d3.max(this.sortedBars.map(b => +b[colValue]));
+    this.#maxY = d3.max(this.sortedBars.map(b => +b[colValue]));
     if (colLineValue !== '') {
       const lineValues = this.sortedBars.map(b => +b[colLineValue]);
-      maxY = d3.max([maxY, ...lineValues]);
+      this.#maxY = d3.max([this.#maxY, ...lineValues]);
     }
 
-    const valueDomain = [0, maxY];
+    const valueDomain = [0, this.#maxY];
     const groupDomain = this.sortedBars.map(b => b[xAxis]);
 
     this.#leftAxisWidth = 0;
@@ -199,8 +215,13 @@ export class BarChartLib {
       horizontalMode,
     } = this.#config;
 
+    const heightOfChar = 20;
+    const paddingYOfChar = 3;
+    const countTicks = this.#height / (heightOfChar + paddingYOfChar);
+
     const axis = this.#svg.append('g')
-      .call(d3.axisLeft(this.#yScale))
+      .call(d3.axisLeft(this.#yScale)
+              .ticks(countTicks))
       .attr('transform', `translate(${this.#leftAxisWidth}, 0)`);
 
     axis.selectAll('.domain')
@@ -221,10 +242,18 @@ export class BarChartLib {
   createAxisX() {
     const {
       horizontalMode,
+      paddingOuter,
     } = this.#config;
 
+    const paddingXOfChart = paddingOuter;
+    const sizeOfChar = 10;
+    const paddingXOfChar = 16;
+    const sizeOfNumber = String(this.#maxY).length * sizeOfChar + paddingXOfChar;
+    const countTicks = (this.#width - paddingXOfChart) / sizeOfNumber;
+
     const axis = this.#svg.append('g')
-      .call(d3.axisBottom(this.#xScale))
+      .call(d3.axisBottom(this.#xScale)
+              .ticks(countTicks))
       .attr('transform', `translate(${this.#leftAxisWidth}, ${this.#height})`);
 
     axis.selectAll('.tick text')
@@ -243,7 +272,20 @@ export class BarChartLib {
       axis.select('.domain')
         .attr('class', 'x-axis-line')
         .attr('d', d3.line()([[0, 0], [this.#width - this.#leftAxisWidth, 0]]));
-           
+
+      // считаем количество символов всех надписей, чтобы примерно посчитать их ширину
+      let countChars = 0;
+      axis.selectAll('.tick').nodes().forEach((tickItem) => {
+        countChars += tickItem.textContent.length;
+      });
+
+      // если надписи не помещаются, то проворачиваем их на 45 градусов
+      const paddingXOfLabelChar = 3;
+      if (countChars * (sizeOfChar + paddingXOfLabelChar) >= this.#width) {
+        axis.selectAll('.tick text')
+          .attr('text-anchor', 'start')
+          .attr('transform', 'translate(8, -2) rotate(45)');
+      }
     }
   }
 

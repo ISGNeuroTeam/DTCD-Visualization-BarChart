@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Changed
 
 - title size
+- improved adaptability of chart axes
 
 ## [0.5.0]
 
