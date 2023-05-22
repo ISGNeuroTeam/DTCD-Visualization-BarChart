@@ -114,7 +114,7 @@ export class BarChartLib {
       .append('svg')
       .attr('class', 'content')
       .append('g')
-      .attr('transform', `translate(0, ${horizontalMode ? 0 : marginY})`);
+      .attr('transform', `translate(10, ${horizontalMode ? 10 : marginY})`);
 
     this.#maxY = d3.max(this.sortedBars.map(b => +b[colValue]));
     if (colLineValue !== '') {
