@@ -35,6 +35,8 @@ export class VisualizationBarChart extends PanelPlugin {
     horizontalMode: false,
     roundValueTo: '2',
     colorsByRange: [],
+    riskLineColor: 'var(--pink)',
+    riskLineCaptionColor: 'var(--pink)',
   };
 
   static getRegistrationMeta() {
@@ -284,8 +286,43 @@ export class VisualizationBarChart extends PanelPlugin {
           component: 'gauge-segments',
           propName: 'colorsByRange',
         },
+        {
+          component: 'colorpicker',
+          propName: 'riskLineColor',
+          attrs: {
+            label: 'Цвет засечек на столбцах',
+          },
+        },
+        {
+          component: 'colorpicker',
+          propName: 'riskLineCaptionColor',
+          attrs: {
+            label: 'Цвет подписи для засечек на столбцах',
+          },
+        },
       ],
     };
   }
+  
+  getState() {
+    return Object.assign(
+      this.getPluginConfig(),
+      { dataset: this.#vue.dataset },
+    );
+  }
 
+  setState(newState) {
+    if (typeof newState !== 'object' ) return;
+
+    this.setPluginConfig(newState);
+
+    const vueNamesFields = [
+      'dataset',
+    ];
+
+    for (const [prop, value] of Object.entries(newState)) {
+      if (!vueNamesFields.includes(prop)) continue;
+      this.#vue[prop] = value;
+    }
+  }
 }

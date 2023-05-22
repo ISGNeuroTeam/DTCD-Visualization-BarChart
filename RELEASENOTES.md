@@ -1,3 +1,15 @@
+## [0.6.0]
+
+### Added
+
+- plugin state API
+- ability to change the color of lines on columns and captions
+
+## Changed
+
+- title size
+- improved adaptability of chart axes
+
 ## [0.5.0]
 
 ### Added

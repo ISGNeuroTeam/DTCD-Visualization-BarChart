@@ -149,11 +149,12 @@ export default {
     color: var(--text_main)
     font-size: 18px
     font-weight: 700
-    line-height: 25px
-    padding: 10px 16px 0
+    line-height: 1.4
+    padding: 10px
 
   .svg-container
     flex-grow: 1
+    padding: 10px
     overflow: hidden
 
     .content
@@ -175,11 +176,9 @@ export default {
         stroke-width: .5
 
       .risk-line
-        stroke: var(--pink)
         stroke-width: 3
 
       .risk-line-caption
-        fill: var(--pink)
         font-weight: 600
         text-anchor: middle
         &.hor
