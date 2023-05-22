@@ -20,7 +20,7 @@ export class BarChartLib {
 
   #config = {
     marginX: 10,
-    marginY: 10,
+    marginY: 20,
     paddingInner: .7,
     paddingOuter: .35,
     targetName: null,
